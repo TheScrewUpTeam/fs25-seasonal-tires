@@ -1,0 +1,14 @@
+{
+  "diagnostics": {
+    "globals": [
+      "g_currentMission",
+      "g_currentModDirectory",
+      "g_specializationManager",
+      "Vehicle",
+      "SpecializationUtil",
+      "addModEventListener",
+      "print",
+      "log"
+    ]
+  }
+}

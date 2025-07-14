@@ -1,0 +1,23 @@
+<modDesc descVersion="97">
+  <title>
+    <en>Seasonal Tires Mod</en>
+  </title>
+  <description>
+    <en>WIP Mod to add seasonal/terrain-aware tires</en>
+  </description>
+  <author>TheScrew-UpTeam</author>
+  <version>0.1.0</version>
+
+  <extraSourceFiles>
+    <sourceFile filename="src/TireManager.lua"/>
+  </extraSourceFiles>
+  <iconFilename>icon_RealisticWeather.dds</iconFilename>
+  <specializations>
+    <specialization name="tireManager" className="TireManager" filename="src/TireManager.lua"/>
+  </specializations>
+  <vehicleTypes>
+    <type name="baseDrivable" parentName="">
+      <specialization name="tireManager"/>
+    </type>
+  </vehicleTypes>
+</modDesc>
