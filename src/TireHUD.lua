@@ -5,7 +5,7 @@ local HUD_Y = 0.25 -- low on screen
 local HUD_WIDTH = 0.12
 local HUD_HEIGHT = 0.05
 
-local ICON_SIZE = 0.02
+local ICON_SIZE = 0.015
 local BAR_HEIGHT = 0.01
 
 if not TireHUD then TireHUD = {} end
@@ -31,18 +31,18 @@ function TireHUD:draw(vehicle, tireData)
 
     -- Tire icon (left side)
     setOverlayColor(iconOverlay, 1, 1, 1, 1)
-    renderOverlay(iconOverlay, x + 0.005, y + (HUD_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, ICON_SIZE)
+    renderOverlay(iconOverlay, x + 0.005, y + (HUD_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, ICON_SIZE * 1.77)
 
     -- Tire type text (right of icon)
     setTextBold(true)
     setTextColor(1, 1, 1, 1)
-    renderText(x + ICON_SIZE + 0.012, y + HUD_HEIGHT / 2 - 0.005, 0.015, tireData.name or "Unknown Tires")
+    renderText(x + ICON_SIZE + 0.01, y + HUD_HEIGHT / 2, 0.02, tireData.name or "Unknown Tires")
     setTextBold(false)
 
     -- Progress bar (bottom, right of icon)
-    local barX = x + ICON_SIZE + 0.012
+    local barX = x + 0.005
     local barY = y + 0.005
-    local barWidth = HUD_WIDTH - ICON_SIZE - 0.02
+    local barWidth = HUD_WIDTH - 0.01
     local barHeight = BAR_HEIGHT
     local wear = tireData.wear or 0
     local wearFill = 1.0 - wear -- full = good, empty = worn

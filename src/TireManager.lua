@@ -93,8 +93,6 @@ TireManager.config = {
     frictionMin = 0.2,
     frictionMax = 2.5
 }
-TireManager.debugLogTimer = 0
-TireManager.debugLogInterval = 1000 -- ms
 
 ---
 -- Get the tire type for a vehicle.
@@ -162,12 +160,9 @@ function TireManager.getEffectiveFriction(vehicle, physWheel)
 
     -- Clamp to config range
     local clamped = math.max(TireManager.config.frictionMin, math.min(TireManager.config.frictionMax, friction))
-    if not TireManager.lastDebugLogTime or TireManager.debugLogTimer - TireManager.lastDebugLogTime >= TireManager.debugLogInterval then
-        print(string.format("[TireManager] Friction calc: base=%.2f, field=%.2f, grass=%.2f, road=%.2f, dirt=%.2f, track=%.2f, sand=%.2f, snow=%.2f, sum=%.2f, clamped=%.2f, tireType=%s, surface=%s, isSnow=%s, vehicle=%s",
-            tireData.frictionModifier or 0, tireData.fieldBonus or 0, tireData.grassBonus or 0, tireData.roadBonus or 0, tireData.dirtBonus or 0, tireData.trackBonus or 0, tireData.sandBonus or 0, tireData.snowBonus or 0,
-            friction, clamped, tireType, surface, tostring(isSnow), vehicle.getName and vehicle:getName() or tostring(vehicle)))
-        TireManager.lastDebugLogTime = TireManager.debugLogTimer
-    end
+    print(string.format("[TireManager] Friction calc: base=%.2f, field=%.2f, grass=%.2f, road=%.2f, dirt=%.2f, track=%.2f, sand=%.2f, snow=%.2f, sum=%.2f, clamped=%.2f, tireType=%s, surface=%s, isSnow=%s, vehicle=%s",
+        tireData.frictionModifier or 0, tireData.fieldBonus or 0, tireData.grassBonus or 0, tireData.roadBonus or 0, tireData.dirtBonus or 0, tireData.trackBonus or 0, tireData.sandBonus or 0, tireData.snowBonus or 0,
+        friction, clamped, tireType, surface, tostring(isSnow), vehicle.getName and vehicle:getName() or tostring(vehicle)))
     return clamped
 end
 
@@ -208,8 +203,6 @@ function TireManager.injPhysWheelUpdateTireFriction(physWheel)
         frictionScale
     )
     physWheel.isFrictionDirty = false
-    -- Update debug log timer for time-based logging
-    TireManager.debugLogTimer = (TireManager.debugLogTimer or 0) + (g_currentDt or 0)
 end
 WheelPhysics.updateTireFriction = Utils.appendedFunction(WheelPhysics.updateTireFriction, TireManager.injPhysWheelUpdateTireFriction)
 
@@ -261,7 +254,7 @@ function TireManager.injWokshopScreenSetVehicle(screen, vehicle)
 		screen.tmsButton:setText("Change tires")
 		screen.tmsButton:setDisabled(true)
 	else
-		screen.tmsButton:setText(string.format("%s (%s)", "Change tires", g_i18n:formatMoney(100, 0, true, true)))
+		screen.tmsButton:setText(string.format("%s", "Change tires"))
 		screen.tmsButton:setDisabled(false)
 	end
 end
@@ -270,11 +263,15 @@ WorkshopScreen.setVehicle = Utils.appendedFunction(WorkshopScreen.setVehicle, Ti
 function TireManager.onReplaceTyresCallback(screen)
     print(PRINT_PREFIX .. "onReplaceTyresCallback called")
 
-    local function getFormattedOption(index)
+    local function getFormattedOption(index, isCurrent)
         print(PRINT_PREFIX .. "getFormattedOption", index, TireManager.tireTypes[index].name)
         local name = TireManager.tireTypes[index].name
-        local feeString = g_i18n:formatMoney(100, 0, true, true)
-        return string.format("%s (%s)", name, feeString)
+        -- local feeString = g_i18n:formatMoney(100, 0, true, true)
+        if isCurrent then
+            return string.format("%s (Installed)", name)
+        else
+            return string.format("%s (Owned)", name)
+        end
     end
 
     local tireKeys = {}
@@ -284,7 +281,7 @@ function TireManager.onReplaceTyresCallback(screen)
     for tireKey, tireData in pairs(TireManager.tireTypes) do
         print(PRINT_PREFIX .. "processing options", tireKey)
         table.insert(tireKeys, tireKey)
-        table.insert(options, getFormattedOption(tireKey))
+        table.insert(options, getFormattedOption(tireKey, tireKey == screen.vehicle.tireManagerTireType))
         if tireKey == screen.vehicle.tireManagerTireType then
             defaultIndex = i
         end
@@ -301,7 +298,7 @@ function TireManager.onReplaceTyresCallback(screen)
             -- g_shopConfigScreen:playSample(GuiSoundPlayer.SOUND_SAMPLES.ERROR)
         end
 
-    end, "Desctiption", "Title", options, defaultIndex)
+    end, "Wisely select the most appropriate tire set for current weather conditions and planned work", "Select tires set", options, defaultIndex)
 	return true
 end
 
@@ -318,7 +315,7 @@ function TireManager.injWokshopScreenOnOpen(screen)
 		tmsButton.onClickCallback = function()
 			TireManager.onReplaceTyresCallback(screen)
 		end
-		tmsButton:setText(string.format("%s (%s)", "Change tires", g_i18n:formatMoney(100, 0, true, true)))
+		tmsButton:setText(string.format("%s", "Change tires"))
 		screen.uytBtn = tmsButton
 		
 		-- Separator
