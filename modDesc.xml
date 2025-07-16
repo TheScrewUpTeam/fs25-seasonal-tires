@@ -9,15 +9,7 @@
   <version>0.1.0</version>
 
   <extraSourceFiles>
-    <sourceFile filename="src/TireManager.lua"/>
+    <sourceFile filename="src/registerTireManager.lua"/>
   </extraSourceFiles>
   <iconFilename>icon_RealisticWeather.dds</iconFilename>
-  <specializations>
-    <specialization name="tireManager" className="TireManager" filename="src/TireManager.lua"/>
-  </specializations>
-  <vehicleTypes>
-    <type name="baseDrivable" parentName="">
-      <specialization name="tireManager"/>
-    </type>
-  </vehicleTypes>
 </modDesc>

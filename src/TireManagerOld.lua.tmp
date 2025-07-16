@@ -1,0 +1,216 @@
+TireManager = {
+    -- Define supported tire types and their behavior modifiers
+    tireTypes = {
+        allSeason = {
+            name = "All-Season",
+            frictionModifier = 1.0,
+            mudBonus = -0.4,   -- field
+            snowBonus = -0.4,  -- snow
+            roadBonus = 0.0,   -- dry road
+            wearRate = 1.0
+        },
+        mud = {
+            name = "Mud Tire",
+            frictionModifier = 1.0,
+            mudBonus = 0.4,
+            snowBonus = -0.2,
+            roadBonus = -0.1,
+            wearRate = 1.2
+        },
+        snow = {
+            name = "Snow Tire",
+            frictionModifier = 1.0,
+            mudBonus = -0.3,
+            snowBonus = 0.5,
+            roadBonus = -0.1,
+            wearRate = 1.1
+        },
+        road = {
+            name = "Road Tire",
+            frictionModifier = 1.1,
+            mudBonus = -0.5,
+            snowBonus = -0.6,
+            roadBonus = 0.5,
+            wearRate = 0.9
+        },
+        flotation = {
+            name = "Flotation Tire",
+            frictionModifier = 0.95,
+            mudBonus = 0.3,
+            snowBonus = 0.2,
+            roadBonus = -0.2,
+            wearRate = 1.3
+        }
+    },
+    debugLogTimer = 0,
+    debugLogInterval = 1000 -- ms
+}
+
+function TireManager.prerequisitesPresent(specializations)
+    return true
+end
+
+function TireManager.initSpecialization()
+    print("[TireManager] Specialization initialized.")
+end
+
+function TireManager.registerEventListeners(vehicleType)
+    SpecializationUtil.registerEventListener(vehicleType, "onLoad", TireManager)
+    SpecializationUtil.registerEventListener(vehicleType, "onUpdateTick", TireManager)
+end
+
+function TireManager:onLoad(savegame)
+    print("[TireManager] Loaded for: " .. self:getName())
+    -- Add a tire type field to each vehicle using this specialization
+    local spec = self.spec_tireManager or {}
+    if spec.tireType == nil then
+        spec.tireType = "allSeason" -- default for now
+    end
+    self.spec_tireManager = spec
+end
+
+function TireManager:getTireTypeData()
+    local spec = self.spec_tireManager
+    local tireType = spec and spec.tireType or "nil"
+    local tireData = TireManager.tireTypes[tireType] or TireManager.tireTypes["allSeason"]
+    if (TireManager.debugLogTimer or 0) % TireManager.debugLogInterval < (g_currentDt or 0) then
+        print(string.format("[TireManager] getTireTypeData: tireType=%s, returns=%s", tostring(tireType), tireData and tireData.name or "nil"))
+    end
+    return tireData
+end
+
+function TireManager:onUpdateTick(dt)
+    if not self.rootNode then
+        return
+    end
+    local spec = self.spec_tireManager
+    if not spec then return end
+
+    -- Apply friction to each wheel
+    local wheels = self.spec_wheels and self.spec_wheels.wheels or {}
+    local friction = TireManager:getEffectiveFriction(self)
+
+    for _, wheel in ipairs(wheels) do
+        if wheel.wheelShape then
+            setWheelShapeFriction(wheel.wheelShape, friction)
+        end
+    end
+
+    -- Global debug log timer
+    TireManager.debugLogTimer = (TireManager.debugLogTimer or 0) + dt
+    if TireManager.debugLogTimer % TireManager.debugLogInterval < dt then
+        print(string.format("[TireManager] Friction set to %.2f on %s (tireType: %s)", friction, self:getName(), self.spec_tireManager and self.spec_tireManager.tireType or "nil"))
+    end
+end
+
+function TireManager.getSurfaceType(vehicle)
+    if not vehicle.rootNode then
+        Logging.warning("[TireManager] rootNode is nil — vehicle: %s", vehicle.configFileName or "unknown")
+        return "road"
+    end
+
+    local surface = "road"
+    if vehicle.getIsOnField ~= nil and vehicle:getIsOnField() then
+        surface = "field"
+    end
+    return surface
+end
+
+function TireManager:getEffectiveFriction(vehicle)
+    local tireData = self:getTireTypeData()
+    local friction = tireData.frictionModifier or 1.0
+
+    local surface = TireManager.getSurfaceType(vehicle)
+    local env = g_currentMission.environment
+    local isSnow = false
+    local isRain = false
+
+    -- Check snow
+    local snowHeight = 0
+    if env.snowSystem then
+        local x, y, z = getWorldTranslation(vehicle.rootNode)
+        snowHeight = env.snowSystem:getSnowHeightAtWorldPos(x, y, z)
+    end
+    if env.weather:getIsSnowing() or snowHeight > 0.05 then
+        isSnow = true
+    end
+    -- Check rain
+    if env.weather:getIsRaining() then
+        isRain = true
+    end
+
+    -- Apply bonuses
+    if surface == "field" then
+        friction = friction + (tireData.mudBonus or 0.0)
+    elseif surface == "road" then
+        friction = friction + (tireData.roadBonus or 0.0)
+    end
+    if isSnow then
+        friction = friction + (tireData.snowBonus or 0.0)
+    elseif isRain then
+        friction = friction * 0.9 -- 10% penalty for rain (on top of other bonuses)
+    end
+
+    -- Clamp between sane values
+    local clamped = math.max(0.5, math.min(2.0, friction))
+    if (TireManager.debugLogTimer or 0) % TireManager.debugLogInterval < (g_currentDt or 0) then
+        print(string.format("[TireManager] Friction calc: base=%.2f, mud=%.2f, road=%.2f, snow=%.2f, sum=%.2f, clamped=%.2f, tireType=%s, surface=%s, isSnow=%s",
+            tireData.frictionModifier or 0, tireData.mudBonus or 0, tireData.roadBonus or 0, tireData.snowBonus or 0,
+            friction, clamped, (self.spec_tireManager and self.spec_tireManager.tireType) or "nil", surface, tostring(isSnow)))
+    end
+    return clamped
+end
+
+addConsoleCommand("tmSetTireType", "Set tire type on selected vehicle", "consoleSetTireType", TireManager)
+
+function TireManager:consoleSetTireType(tireType)
+    local vehicle = g_currentMission.controlledVehicle
+    if not vehicle and _G.g_activeVehicleCamera and _G.g_activeVehicleCamera.vehicle then
+        vehicle = _G.g_activeVehicleCamera.vehicle
+        print("[TireManager] Using g_activeVehicleCamera.vehicle:", tostring(vehicle and vehicle.configFileName or vehicle))
+    end
+    if not vehicle then
+        print("[TireManager] No vehicle selected for this player.")
+        return
+    end
+    if not vehicle.spec_tireManager then
+        print("[TireManager] Vehicle has no tireManager spec.")
+        return
+    end
+    if TireManager.tireTypes[tireType] == nil then
+        print("[TireManager] Unknown tire type: " .. tostring(tireType))
+        print("Available types: " .. table.concat(tableKeys(TireManager.tireTypes), ", "))
+        return
+    end
+    vehicle.spec_tireManager.tireType = tireType
+    print(string.format("[TireManager] Tire type set to '%s' on %s", tireType, vehicle.configFileName or "vehicle"))
+end
+
+local function addTireManagerToCompatibleVehicles()
+    for typeName, vehicleType in pairs(g_vehicleTypeManager.types) do
+        if vehicleType ~= nil and vehicleType.specializations ~= nil then
+            -- Only add to vehicles that are both drivable and motorized, and not placeables or trains
+            if SpecializationUtil.hasSpecialization(Drivable, vehicleType.specializations)
+                and SpecializationUtil.hasSpecialization(Motorized, vehicleType.specializations)
+                and not SpecializationUtil.hasSpecialization(Locomotive, vehicleType.specializations)
+                and not SpecializationUtil.hasSpecialization(Placeable, vehicleType.specializations)
+                and not SpecializationUtil.hasSpecialization(ConveyorBelt, vehicleType.specializations)
+                and not SpecializationUtil.hasSpecialization(LoaderVehicle, vehicleType.specializations)
+            then
+                if not SpecializationUtil.hasSpecialization(TireManager, vehicleType.specializations) then
+                    g_vehicleTypeManager:addSpecialization(typeName, "tireManager")
+                end
+                -- Register event listeners for this vehicle type
+                TireManager.registerEventListeners(vehicleType)
+            end
+        end
+    end
+    print("[TireManager] Added to all compatible vehicle types.")
+end
+
+local oldLoadMap = FSBaseMission.loadMap
+FSBaseMission.loadMap = function(self, ...)
+    local result = oldLoadMap(self, ...)
+    addTireManagerToCompatibleVehicles()
+    return result
+end
