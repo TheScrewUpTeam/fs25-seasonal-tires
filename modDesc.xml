@@ -12,4 +12,20 @@
     <sourceFile filename="src/registerTireManager.lua"/>
   </extraSourceFiles>
   <iconFilename>icon_RealisticWeather.dds</iconFilename>
+
+  <l10n>
+		<text name="input_TMS_CHANGE_TIRES">
+			<en>Change Tires</en>
+		</text>
+  </l10n>
+
+	<inputBinding>
+		<actionBinding action="TMS_CHANGE_TIRES">
+			<binding device="KB_MOUSE_DEFAULT" input="KEY_t" />
+		</actionBinding>
+	</inputBinding>
+
+	<actions>
+		<action name="TMS_CHANGE_TIRES" />
+	</actions>
 </modDesc>

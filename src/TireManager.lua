@@ -3,6 +3,7 @@
 --
 
 source(g_currentModDirectory .. "src/TireHUD.lua")
+source(g_currentModDirectory .. "src/TireManagerChangeTireEvent.lua")
 
 if Utils == nil then Utils = {} end
 ---
@@ -20,7 +21,7 @@ function Utils.appendedFunction(orig, toAdd)
     end
 end
 
-local PRINT_PREFIX = "[TireManager] - "
+local PRINT_PREFIX = "[SeasonalTiresMod] "
 
 TireManager = {}
 TireManager.surfaceConfig = {
@@ -245,5 +246,139 @@ function TireManager.consoleSetTireType(self, tireType)
     TireManager.setTireType(vehicle, tireType)
 end
 addConsoleCommand("tmSetTireType", "Set tire type on selected vehicle", "consoleSetTireType", TireManager)
+
+-- =================================== Change Tires =======================================================
+
+
+function TireManager.injWokshopScreenSetVehicle(screen, vehicle)
+	if screen.tmsButton == nil then
+		return
+	end
+
+	screen.tmsButton:setVisible(vehicle ~= nil and vehicle.uytHasTyres == true)
+	
+	if vehicle == nil then
+		screen.tmsButton:setText("Change tires")
+		screen.tmsButton:setDisabled(true)
+	else
+		screen.tmsButton:setText(string.format("%s (%s)", "Change tires", g_i18n:formatMoney(100, 0, true, true)))
+		screen.tmsButton:setDisabled(false)
+	end
+end
+WorkshopScreen.setVehicle = Utils.appendedFunction(WorkshopScreen.setVehicle, TireManager.injWokshopScreenSetVehicle)
+
+function TireManager.onReplaceTyresCallback(screen)
+    print(PRINT_PREFIX .. "onReplaceTyresCallback called")
+
+    local function getFormattedOption(index)
+        print(PRINT_PREFIX .. "getFormattedOption", index, TireManager.tireTypes[index].name)
+        local name = TireManager.tireTypes[index].name
+        local feeString = g_i18n:formatMoney(100, 0, true, true)
+        return string.format("%s (%s)", name, feeString)
+    end
+
+    local tireKeys = {}
+    local options = {}
+    local defaultIndex = 1
+    local i = 1
+    for tireKey, tireData in pairs(TireManager.tireTypes) do
+        print(PRINT_PREFIX .. "processing options", tireKey)
+        table.insert(tireKeys, tireKey)
+        table.insert(options, getFormattedOption(tireKey))
+        if tireKey == screen.vehicle.tireManagerTireType then
+            defaultIndex = i
+        end
+        i = i + 1
+    end
+
+	OptionDialog.show(function(result)
+        if result > 0 then
+            local selectedKey = tireKeys[result]
+            print(PRINT_PREFIX .. " Selected tire", result, selectedKey)
+            TireManager.setTireType(screen.vehicle, selectedKey)
+            g_shopConfigScreen:playSample(GuiSoundPlayer.SOUND_SAMPLES.YES)
+        else
+            -- g_shopConfigScreen:playSample(GuiSoundPlayer.SOUND_SAMPLES.ERROR)
+        end
+
+    end, "Desctiption", "Title", options, defaultIndex)
+	return true
+end
+
+function TireManager.injWokshopScreenOnOpen(screen)
+	if screen.tmsWorkshopInited == nil then
+        print(PRINT_PREFIX .. "Workshop button injection...")
+
+		-- Button
+		local tmsButton = ButtonElement.new(screen.buttonsBox)
+		tmsButton.name = "tmsChange"
+		screen.buttonsBox:addElement(tmsButton)
+		tmsButton:applyProfile("buttonActivate")
+		tmsButton:setInputAction("TMS_CHANGE_TIRES")
+		tmsButton.onClickCallback = function()
+			TireManager.onReplaceTyresCallback(screen)
+		end
+		tmsButton:setText(string.format("%s (%s)", "Change tires", g_i18n:formatMoney(100, 0, true, true)))
+		screen.uytBtn = tmsButton
+		
+		-- Separator
+		local tmsSep = BitmapElement.new(tmsButton)
+		tmsSep.name = "separator"
+		tmsButton:addElement(tmsSep)
+		tmsSep:applyProfile("fs25_buttonBoxSeparator")
+
+		screen.tmsWorkshopInited = true
+        print(PRINT_PREFIX .. "Workshop button injected...")
+	end
+
+	local _, eventId = g_inputBinding:registerActionEvent("TMS_CHANGE_TIRES", screen, TireManager.onReplaceTyresCallback, false, true, false, true)
+	screen.tmsEventId = eventId
+end
+WorkshopScreen.onOpen = Utils.appendedFunction(WorkshopScreen.onOpen, TireManager.injWokshopScreenOnOpen)
+
+function TireManager.injWokshopScreenOnClose(screen)
+	if screen.tmsEventId ~= nil then
+		g_inputBinding:removeActionEvent(screen.tmsEventId)
+		screen.tmsEventId = nil
+	end
+end
+WorkshopScreen.onClose = Utils.appendedFunction(WorkshopScreen.onClose, TireManager.injWokshopScreenOnClose)
+
+-- ======================================= Save / Load =========================================================
+function TireManager.injWheelsSaveToXMLFile(vehicle, xmlFile, saveKey)
+	if vehicle.spec_wheels == nil or vehicle.tireManagerTireType == nil then
+		return
+	end
+    print(PRINT_PREFIX .. "Save injection...")
+	
+    local vehicleKey = string.format("%s#tmsTireType", saveKey)
+    xmlFile:setValue(vehicleKey, vehicle.tireManagerTireType)
+
+	-- local tyreDistanceKey = string.format("%s#uytDistanceMultiplier", wheelsKey)
+	-- xmlFile:setValue(tyreDistanceKey, UseYourTyres.tyreDistanceMultiplier)
+    print(PRINT_PREFIX .. "Saved as ", vehicleKey)
+end
+Wheels.saveToXMLFile = Utils.appendedFunction(Wheels.saveToXMLFile, TireManager.injWheelsSaveToXMLFile)
+
+function TireManager.injWheelsOnLoadFinished(vehicle, savegame)
+	if vehicle.spec_wheels == nil or savegame == nil then
+		return
+	end
+    print(PRINT_PREFIX .. "Load injection...")
+
+	local vehicleKey = string.format("%s.wheels#tmsTireType", savegame.key)
+	local tireType = savegame.xmlFile:getValue(vehicleKey)
+	TireManager.setTireType(vehicle, tireType or 'allSeason')
+    print(PRINT_PREFIX .. "Loaded from ", vehicleKey)
+end
+Wheels.onLoadFinished = Utils.appendedFunction(Wheels.onLoadFinished, TireManager.injWheelsOnLoadFinished)
+
+function TireManager.injVehicleInit()
+    print(PRINT_PREFIX .. "Register save path")
+	Vehicle.xmlSchemaSavegame:register(XMLValueType.STRING, "vehicles.vehicle(?).wheels#tmsTireType", "Season Tires Mod Tire Type")
+end
+Vehicle.init = Utils.appendedFunction(Vehicle.init, TireManager.injVehicleInit)
+
+g_workshopScreen = WorkshopScreen.createFromExistingGui(g_workshopScreen, "WorkshopScreen")
 
 addModEventListener(TireManager)

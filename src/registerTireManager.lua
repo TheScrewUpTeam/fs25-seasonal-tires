@@ -9,4 +9,4 @@ if Utils.getFilename == nil then
     end
 end
 
-source(Utils.getFilename("src/TireManager.lua", g_currentModDirectory)); 
+source(Utils.getFilename("src/TireManager.lua", g_currentModDirectory))
