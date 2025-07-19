@@ -1,7 +1,7 @@
 print("[TireHUD] file loaded")
 
-local HUD_X = 0.85 -- right side
-local HUD_Y = 0.25 -- low on screen
+local HUD_X = 0.7 -- right side
+local HUD_Y = 0.05 -- low on screen
 local HUD_WIDTH = 0.12
 local HUD_HEIGHT = 0.05
 
