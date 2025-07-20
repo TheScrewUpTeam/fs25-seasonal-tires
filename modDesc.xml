@@ -1,79 +1,117 @@
 <modDesc descVersion="97">
-  <title>
-    <en>Seasonal Tires Mod</en>
-  </title>
-  <description>
-    <en>WIP Mod to add seasonal/terrain-aware tires</en>
-  </description>
-  <author>TheScrew-UpTeam</author>
-  <version>0.1.0</version>
+	<title>
+		<en>Seasonal Tires Mod</en>
+	</title>
+	<description>
+		<en>WIP Mod to add seasonal/terrain-aware tires</en>
+	</description>
+	<author>TheScrew-UpTeam</author>
+	<version>0.1.0</version>
 
-  <extraSourceFiles>
-    <sourceFile filename="src/registerTireManager.lua"/>
-  </extraSourceFiles>
-  <iconFilename>icon_RealisticWeather.dds</iconFilename>
+	<extraSourceFiles>
+		<sourceFile filename="src/registerTireManager.lua" />
+	</extraSourceFiles>
+	<iconFilename>icon_RealisticWeather.dds</iconFilename>
 
-  <l10n>
+	<l10n>
 		<text name="item_tmsTireAllSeasons">
 			<en>All Seasons</en>
+			<de>Alle Jahreszeiten</de>
+			<pl>Wszystkie sezony</pl>
 		</text>
 		<text name="item_tmsTireMud">
 			<en>Mud Tire</en>
+			<de>Schlammreifen</de>
+			<pl>Opona błotna</pl>
 		</text>
 		<text name="item_tmsTireSnow">
 			<en>Snow Tire</en>
+			<de>Schneereifen</de>
+			<pl>Opona śniegowa</pl>
 		</text>
 		<text name="item_tmsTireRoad">
 			<en>Road Tire</en>
+			<de>Straßenreifen</de>
+			<pl>Opona drogowa</pl>
 		</text>
 
 		<text name="ui_tmsTireInstalled">
 			<en>%s (Installed)</en>
+			<de>%s (Installiert)</de>
+			<pl>%s (Zainstalowane)</pl>
 		</text>
-    <text name="ui_tmsTireOwned">
+		<text name="ui_tmsTireOwned">
 			<en>%s (Owned %d%%)</en>
+			<de>%s (Besitzt %d%%)</de>
+			<pl>%s (Posiadane %d%%)</pl>
 		</text>
-    <text name="ui_tmsTireNew">
+		<text name="ui_tmsTireNew">
 			<en>%s (Buy for %s)</en>
+			<de>%s (Kaufen für %s)</de>
+			<pl>%s (Kup za %s)</pl>
 		</text>
-    <text name="ui_tmsBuyNewTireConfirm">
+		<text name="ui_tmsBuyNewTireConfirm">
 			<en>Buy new set of tires for %s?</en>
+			<de>Neuen Reifensatz für %s kaufen?</de>
+			<pl>Kupić nowy zestaw opon za %s?</pl>
 		</text>
-    <text name="ui_tmsSelectTireSet">
+		<text name="ui_tmsSelectTireSet">
 			<en>Select the tire set you want to install:</en>
+			<de>Wählen Sie den Reifensatz, den Sie installieren möchten:</de>
+			<pl>Wybierz zestaw opon do zamontowania:</pl>
 		</text>
-    <text name="ui_tmsTireReplacementDalogTitle">
+		<text name="ui_tmsTireReplacementDalogTitle">
 			<en>TIRES REPLACEMENT</en>
+			<de>REIFENWECHSEL</de>
+			<pl>WYMIANA OPON</pl>
 		</text>
-    <text name="ui_tmsSelectTireSetForSell">
+		<text name="ui_tmsSelectTireSetForSell">
 			<en>%s (%d%% - Sell for %s)</en>
+			<de>%s (%d%% - Verkaufen für %s)</de>
+			<pl>%s (%d%% - Sprzedaj za %s)</pl>
 		</text>
-    <text name="ui_tmsTireSellConfirmation">
+		<text name="ui_tmsTireSellConfirmation">
 			<en>Sell set of %s tires for %s?</en>
+			<de>Satz %s Reifen für %s verkaufen?</de>
+			<pl>Sprzedać zestaw opon %s za %s?</pl>
 		</text>
-    <text name="ui_tmsSelectTireSetForSellDescription">
+		<text name="ui_tmsSelectTireSetForSellDescription">
 			<en>Select a tire set to sell:</en>
+			<de>Wählen Sie einen Reifensatz zum Verkaufen:</de>
+			<pl>Wybierz zestaw opon do sprzedaży:</pl>
 		</text>
-    <text name="ui_tmsSellTireSetDialogTitle">
+		<text name="ui_tmsSellTireSetDialogTitle">
 			<en>SELL TIRE SET</en>
+			<de>REIFENSATZ VERKAUFEN</de>
+			<pl>SPRZEDAŻ ZESTAWU OPON</pl>
 		</text>
-    <text name="ui_tmsManageTiresButtonTrue">
+		<text name="ui_tmsManageTiresButtonTrue">
 			<en>Manage tires (%d)</en>
+			<de>Reifen verwalten (%d)</de>
+			<pl>Zarządzaj oponami (%d)</pl>
 		</text>
-    <text name="ui_tmsManageTiresButtonFalse">
+		<text name="ui_tmsManageTiresButtonFalse">
 			<en>Manage tires</en>
+			<de>Reifen verwalten</de>
+			<pl>Zarządzaj oponami</pl>
 		</text>
-    <text name="ui_tmsChangeTiresButton">
+		<text name="ui_tmsChangeTiresButton">
 			<en>Change tires</en>
+			<de>Reifen wechseln</de>
+			<pl>Zmień opony</pl>
 		</text>
 
-    <text name="input_TMS_CHANGE_TIRES">
+		<text name="input_TMS_CHANGE_TIRES">
 			<en>Change Tires</en>
+			<de>Reifen wechseln</de>
+			<pl>Zmień opony</pl>
 		</text>
 		<text name="input_TMS_MANAGE_TIRES">
 			<en>Manage Tires Storage</en>
+			<de>Reifenlager verwalten</de>
+			<pl>Zarządzaj magazynem opon</pl>
 		</text>
-  </l10n>
+	</l10n>
 
 	<inputBinding>
 		<actionBinding action="TMS_CHANGE_TIRES">
