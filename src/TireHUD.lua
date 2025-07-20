@@ -18,16 +18,16 @@ if not TireHUD.ICON_OVERLAY then
     TireHUD.ICON_OVERLAY = createImageOverlay(g_currentModDirectory .. "tire_icon.dds")
 end
 if not TireHUD.ICON_ALLSEASON then
-    TireHUD.ICON_ALLSEASON = createImageOverlay(g_currentModDirectory .. "media/icon_allseason.png")
+    TireHUD.ICON_ALLSEASON = createImageOverlay(g_currentModDirectory .. "media/icon_allseason.dds")
 end
 if not TireHUD.ICON_MUD then
-    TireHUD.ICON_MUD = createImageOverlay(g_currentModDirectory .. "media/icon_mud.png")
+    TireHUD.ICON_MUD = createImageOverlay(g_currentModDirectory .. "media/icon_mud.dds")
 end
 if not TireHUD.ICON_SNOW then
-    TireHUD.ICON_SNOW = createImageOverlay(g_currentModDirectory .. "media/icon_snow.png")
+    TireHUD.ICON_SNOW = createImageOverlay(g_currentModDirectory .. "media/icon_snow.dds")
 end
 if not TireHUD.ICON_ROAD then
-    TireHUD.ICON_ROAD = createImageOverlay(g_currentModDirectory .. "media/icon_road.png")
+    TireHUD.ICON_ROAD = createImageOverlay(g_currentModDirectory .. "media/icon_road.dds")
 end
 if not TireHUD.BAR_OVERLAY then
     TireHUD.BAR_OVERLAY = createImageOverlay("dataS/menu/base/graph_pixel.png")

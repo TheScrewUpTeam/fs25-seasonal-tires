@@ -11,7 +11,7 @@
 	<extraSourceFiles>
 		<sourceFile filename="src/registerTireManager.lua" />
 	</extraSourceFiles>
-	<iconFilename>icon_RealisticWeather.dds</iconFilename>
+	<iconFilename>icon_SeasonalTires.dds</iconFilename>
 
 	<l10n>
 		<text name="item_tmsTireAllSeasons">
