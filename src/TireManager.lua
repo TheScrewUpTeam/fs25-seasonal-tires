@@ -112,6 +112,23 @@ function TireManager.setTireType(vehicle, tireType)
     end
 end
 
+function TireManager.isWheelsVehicle(vehicle)
+    if not vehicle.spec_wheels or not vehicle.spec_wheels.wheels then
+        return false
+    end
+    if not vehicle.spec_tireTracks or vehicle.spec_tireTracks.hasTireTrackNodes == false then
+        return false
+    end
+    local visualWheelsCount = 0
+    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
+        if #wheel.visualWheels > 0 then
+            visualWheelsCount = visualWheelsCount + 1
+            break
+        end
+    end
+    return visualWheelsCount > 0
+end
+
 function TireManager.getEffectiveFriction(vehicle, physWheel)
     local tireType = TireManager.getTireType(vehicle)
     local tireData = TireManager.tireTypes[tireType] or TireManager.tireTypes["allSeason"]
@@ -167,18 +184,49 @@ function TireManager:draw()
     if not vehicle and _G.g_activeVehicleCamera and _G.g_activeVehicleCamera.vehicle then
         vehicle = _G.g_activeVehicleCamera.vehicle
     end
-    if vehicle then
+    if vehicle and TireManager.isWheelsVehicle(vehicle) then
         local tireData = {
             name = TireManager.tireTypes[vehicle.stTireType] and TireManager.tireTypes[vehicle.stTireType].name or "All Season Tires",
             wear = TireManager.getTireWear(vehicle),
+            type = vehicle.stTireType
         }
         TireHUD:draw(vehicle, tireData)
+        -- Additional HUD for child vehicles
+        local allVehiclesWithtires = {}
+        local vehicles = vehicle.rootVehicle.childVehicles
+        for _, subVehicle in ipairs(vehicles) do
+            if TireManager.isWheelsVehicle(subVehicle) and subVehicle ~= vehicle then
+                table.insert(allVehiclesWithtires, subVehicle)
+            end
+        end
+        -- Only one child vehicle with tires
+        if #allVehiclesWithtires == 1 then
+            local subVehicle = allVehiclesWithtires[1]
+            local addData = {
+                name = TireManager.tireTypes[subVehicle.stTireType] and TireManager.tireTypes[subVehicle.stTireType].name or "All Season Tires",
+                wear = TireManager.getTireWear(subVehicle),
+                type = subVehicle.stTireType
+            }
+            TireHUD:drawAdditional(subVehicle, addData)
+        end
+        if #allVehiclesWithtires > 1 then
+            -- Multiple child vehicles with tires, draw additional HUD for each
+            for _, subVehicle in ipairs(allVehiclesWithtires) do
+                if vehicle.getIsSelected ~= nil and subVehicle:getIsSelected() then
+                    local addData = {
+                        name = TireManager.tireTypes[subVehicle.stTireType] and TireManager.tireTypes[subVehicle.stTireType].name or "All Season Tires",
+                        wear = TireManager.getTireWear(subVehicle),
+                    }
+                    TireHUD:drawAdditional(subVehicle, addData)
+                end
+            end
+        end
     end
 end
 
 function TireManager.injPhysWheelUpdateTireFriction(physWheel)
     local vehicle = physWheel.vehicle
-    if not vehicle or not vehicle.spec_wheels or not vehicle.spec_wheels.wheels then return end
+    if not TireManager.isWheelsVehicle(vehicle) then return end
     if not vehicle.isServer or not vehicle.isAddedToPhysics then return end
     local frictionMod = TireManager.getEffectiveFriction(vehicle, physWheel)
     -- Use the game's base friction scale, but modulate it with our value
@@ -203,7 +251,7 @@ end
 Vehicle.onLoad = Utils.appendedFunction(Vehicle.onLoad, TireManager.injOnLoad)
 
 function TireManager.getTireWear(vehicle)
-    if not vehicle or not vehicle.spec_wheels or not vehicle.spec_wheels.wheels then
+    if not vehicle or not TireManager.isWheelsVehicle(vehicle) then
         return 0.0 -- Default to new
     end
 
@@ -228,7 +276,7 @@ function TireManager.getTireWear(vehicle)
 end
 
 function TireManager.setTireWear(vehicle, wear)
-    if not vehicle or not vehicle.spec_wheels or not vehicle.spec_wheels.wheels then
+    if not vehicle or not TireManager.isWheelsVehicle(vehicle) then
         return
     end
 
@@ -250,7 +298,7 @@ end
 
 function TireManager.injUpdateWheelContact(physWheel)
     local vehicle = physWheel.vehicle
-    if not vehicle or not vehicle.spec_wheels or not vehicle.spec_wheels.wheels then
+    if not vehicle or not TireManager.isWheelsVehicle(vehicle) then
         return
     end
     local wheel = physWheel.wheel
@@ -450,7 +498,9 @@ function TireManager.buyTires(vehicle, tireType)
 end
 
 function TireManager.onReplaceTyresCallback(screen)
-    print(PRINT_PREFIX .. "onReplaceTyresCallback called")
+    if (TireManager.isWheelsVehicle(screen.vehicle) == false) then
+        return false
+    end
 
     local storedTires = TireManager.getStoredByVehicle(screen.vehicle)
 
@@ -528,18 +578,18 @@ function TireManager.onReplaceTyresCallback(screen)
 end
 
 function TireManager.injWokshopScreenSetVehicle(screen, vehicle)
-	if screen.tmsButton == nil then
+    if screen.tmsBtn == nil then
 		return
 	end
 
-	screen.tmsButton:setVisible(vehicle ~= nil and vehicle.tmsTireType == true)
-	
-	if vehicle == nil then
-		screen.tmsButton:setText("Change tires")
-		screen.tmsButton:setDisabled(true)
+	screen.tmsBtn:setVisible(vehicle ~= nil)
+
+	if vehicle == nil or not TireManager.isWheelsVehicle(vehicle) then
+		screen.tmsBtn:setText("Change tires")
+		screen.tmsBtn:setDisabled(true)
 	else
-		screen.tmsButton:setText(string.format("%s", "Change tires"))
-		screen.tmsButton:setDisabled(false)
+		screen.tmsBtn:setText("Change tires")
+		screen.tmsBtn:setDisabled(false)
 	end
 end
 WorkshopScreen.setVehicle = Utils.appendedFunction(WorkshopScreen.setVehicle, TireManager.injWokshopScreenSetVehicle)
@@ -559,7 +609,7 @@ function TireManager.injWokshopScreenOnOpen(screen)
 		end
 		tmsButton:setText(string.format("%s", "Change tires"))
 		screen.tmsBtn = tmsButton
-		
+
 		-- Separator
 		local tmsSep = BitmapElement.new(tmsButton)
 		tmsSep.name = "separator"
@@ -585,7 +635,7 @@ WorkshopScreen.onClose = Utils.appendedFunction(WorkshopScreen.onClose, TireMana
 
 -- ======================================= Save / Load =========================================================
 function TireManager.injWheelsSaveToXMLFile(vehicle, xmlFile, saveKey)
-	if vehicle.spec_wheels == nil or vehicle.stTireType == nil then
+	if not TireManager.isWheelsVehicle(vehicle) then
 		return
 	end
     print(PRINT_PREFIX .. "Save injection...")
@@ -605,7 +655,7 @@ end
 Wheels.saveToXMLFile = Utils.appendedFunction(Wheels.saveToXMLFile, TireManager.injWheelsSaveToXMLFile)
 
 function TireManager.injWheelsOnLoadFinished(vehicle, savegame)
-	if vehicle.spec_wheels == nil or savegame == nil then
+	if not TireManager.isWheelsVehicle(vehicle) then
 		return
 	end
     print(PRINT_PREFIX .. "Load injection...")
