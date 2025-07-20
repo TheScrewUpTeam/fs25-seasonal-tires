@@ -14,8 +14,64 @@
   <iconFilename>icon_RealisticWeather.dds</iconFilename>
 
   <l10n>
-		<text name="input_TMS_CHANGE_TIRES">
+		<text name="item_tmsTireAllSeasons">
+			<en>All Seasons</en>
+		</text>
+		<text name="item_tmsTireMud">
+			<en>Mud Tire</en>
+		</text>
+		<text name="item_tmsTireSnow">
+			<en>Snow Tire</en>
+		</text>
+		<text name="item_tmsTireRoad">
+			<en>Road Tire</en>
+		</text>
+
+		<text name="ui_tmsTireInstalled">
+			<en>%s (Installed)</en>
+		</text>
+    <text name="ui_tmsTireOwned">
+			<en>%s (Owned %d%%)</en>
+		</text>
+    <text name="ui_tmsTireNew">
+			<en>%s (Buy for %s)</en>
+		</text>
+    <text name="ui_tmsBuyNewTireConfirm">
+			<en>Buy new set of tires for %s?</en>
+		</text>
+    <text name="ui_tmsSelectTireSet">
+			<en>Select the tire set you want to install:</en>
+		</text>
+    <text name="ui_tmsTireReplacementDalogTitle">
+			<en>TIRES REPLACEMENT</en>
+		</text>
+    <text name="ui_tmsSelectTireSetForSell">
+			<en>%s (%d%% - Sell for %s)</en>
+		</text>
+    <text name="ui_tmsTireSellConfirmation">
+			<en>Sell set of %s tires for %s?</en>
+		</text>
+    <text name="ui_tmsSelectTireSetForSellDescription">
+			<en>Select a tire set to sell:</en>
+		</text>
+    <text name="ui_tmsSellTireSetDialogTitle">
+			<en>SELL TIRE SET</en>
+		</text>
+    <text name="ui_tmsManageTiresButtonTrue">
+			<en>Manage tires (%d)</en>
+		</text>
+    <text name="ui_tmsManageTiresButtonFalse">
+			<en>Manage tires</en>
+		</text>
+    <text name="ui_tmsChangeTiresButton">
+			<en>Change tires</en>
+		</text>
+
+    <text name="input_TMS_CHANGE_TIRES">
 			<en>Change Tires</en>
+		</text>
+		<text name="input_TMS_MANAGE_TIRES">
+			<en>Manage Tires Storage</en>
 		</text>
   </l10n>
 
@@ -23,9 +79,13 @@
 		<actionBinding action="TMS_CHANGE_TIRES">
 			<binding device="KB_MOUSE_DEFAULT" input="KEY_t" />
 		</actionBinding>
+		<actionBinding action="TMS_MANAGE_TIRES">
+			<binding device="KB_MOUSE_DEFAULT" input="KEY_y" />
+		</actionBinding>
 	</inputBinding>
 
 	<actions>
 		<action name="TMS_CHANGE_TIRES" />
+		<action name="TMS_MANAGE_TIRES" />
 	</actions>
 </modDesc>
