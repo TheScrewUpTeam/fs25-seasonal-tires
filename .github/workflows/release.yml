@@ -1,0 +1,25 @@
+name: Archive FS25 Mod on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  create-zip:
+    name: Create and Upload Archive
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create zip archive
+        run: |
+          zip -r FS25_SeasonalTires.zip . -x '*.git*' '.github/*'
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: FS25_SeasonalTires.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
