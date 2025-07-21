@@ -1,17 +1,118 @@
-<modDesc descVersion="97">
+<modDesc descVersion="100">
 	<title>
-		<en>Seasonal Tires Mod</en>
+		<en>Seasonal Tires</en>
+		<de>Saisonale Reifen</de>
+		<pl>Opony Sezonowe</pl>
 	</title>
 	<description>
-		<en>WIP Mod to add seasonal/terrain-aware tires</en>
+		<en>
+		<![CDATA[A comprehensive overhaul to the tire system, introducing seasonal and terrain-aware tires for enhanced realism and gameplay.
+  
+  Features:
+  
+  - Adds four tire types: All Seasons, Mud, Snow, and Road tires, each with unique properties and optimal conditions
+  - Tire performance dynamically changes based on weather, season, and ground conditions (e.g., snow, mud, rain, dry roads)
+  - Switch and manage tire sets directly from the in-game menu
+  - Store, buy, and sell tire sets for your vehicles
+  - Visual indicators and icons for each tire type
+  - Realistic wear and tear: tires degrade faster if used in unsuitable conditions
+  - Improved vehicle handling and traction depending on tire choice and environment
+  - Customizable key bindings for quick tire management and change
+  - Fully localized UI and notifications
+  
+  - Tire Types:
+  --- All Seasons: Balanced performance for most conditions, but not optimal for extreme mud or snow
+  --- Mud: Superior traction in muddy fields, but wears quickly on roads
+  --- Snow: Best grip on snow and ice, but less effective on dry or muddy ground
+  --- Road: Maximum efficiency and durability on paved roads, poor off-road performance
+  
+  - Tire Management:
+  --- Easily view, install, and sell tire sets from the tire management menu
+  --- See current tire condition and value before selling
+  --- Confirmation dialogs to prevent accidental purchases or sales
+  
+  - Realism:
+  --- Tire choice significantly affects vehicle control, speed, and safety
+  --- Using the wrong tire in harsh conditions increases risk of getting stuck or losing control
+  
+  - Github:
+  https://github.com/TheScrewUpTeam/fs25-seasonal-tires]]>
+		</en>
+		<de>
+		<![CDATA[Eine umfassende Überarbeitung des Reifensystems, die saisonale und geländespezifische Reifen für mehr Realismus und Spieltiefe einführt.
+  
+  Funktionen:
+  
+  - Vier Reifentypen: Allwetter-, Schlamm-, Schnee- und Straßenreifen, jeweils mit eigenen Eigenschaften und optimalen Einsatzbereichen
+  - Reifenleistung ändert sich dynamisch je nach Wetter, Jahreszeit und Untergrund (z.B. Schnee, Schlamm, Regen, trockene Straßen)
+  - Reifenwechsel und -verwaltung direkt im Spielmenü
+  - Reifen können gelagert, gekauft und verkauft werden
+  - Visuelle Anzeigen und Icons für jeden Reifentyp
+  - Realistischer Verschleiß: Reifen nutzen sich schneller ab, wenn sie unter ungeeigneten Bedingungen verwendet werden
+  - Verbesserte Fahrzeugkontrolle und Traktion je nach Reifenwahl und Umgebung
+  - Anpassbare Tastenkürzel für schnellen Reifenwechsel und -verwaltung
+  - Vollständig lokalisierte Benutzeroberfläche und Benachrichtigungen
+  
+  - Reifentypen:
+  --- Allwetter: Ausgewogene Leistung für die meisten Bedingungen, aber nicht optimal bei extremem Schlamm oder Schnee
+  --- Schlamm: Beste Traktion auf schlammigen Feldern, nutzt sich jedoch auf Straßen schnell ab
+  --- Schnee: Bester Halt auf Schnee und Eis, weniger effektiv auf trockenem oder schlammigem Untergrund
+  --- Straße: Maximale Effizienz und Haltbarkeit auf befestigten Straßen, schlechte Geländetauglichkeit
+  
+  - Reifenverwaltung:
+  --- Reifen im Menü einfach anzeigen, montieren und verkaufen
+  --- Aktuellen Zustand und Wert der Reifen vor dem Verkauf einsehen
+  --- Bestätigungsdialoge verhindern versehentliche Käufe oder Verkäufe
+  
+  - Realismus:
+  --- Die Reifenwahl beeinflusst Fahrzeugkontrolle, Geschwindigkeit und Sicherheit erheblich
+  --- Falsche Reifenwahl bei schwierigen Bedingungen erhöht das Risiko, stecken zu bleiben oder die Kontrolle zu verlieren
+  
+  - Github:
+  https://github.com/TheScrewUpTeam/fs25-seasonal-tires]]>
+		</de>
+		<pl>
+		<![CDATA[Kompleksowa przebudowa systemu opon, wprowadzająca sezonowe i terenowe opony dla większego realizmu i lepszej rozgrywki.
+  
+  Funkcje:
+  
+  - Cztery typy opon: całoroczne, błotne, śniegowe i drogowe, każda z unikalnymi właściwościami i optymalnymi warunkami użycia
+  - Wydajność opon dynamicznie zmienia się w zależności od pogody, pory roku i warunków podłoża (np. śnieg, błoto, deszcz, suche drogi)
+  - Zmieniaj i zarządzaj zestawami opon bezpośrednio z menu gry
+  - Przechowuj, kupuj i sprzedawaj zestawy opon do swoich pojazdów
+  - Wskaźniki wizualne i ikony dla każdego typu opon
+  - Realistyczne zużycie: opony szybciej się zużywają, jeśli są używane w nieodpowiednich warunkach
+  - Ulepszona kontrola pojazdu i przyczepność w zależności od wyboru opon i środowiska
+  - Konfigurowalne skróty klawiszowe do szybkiego zarządzania i zmiany opon
+  - W pełni zlokalizowany interfejs i powiadomienia
+  
+  - Typy opon:
+  --- Całoroczne: Zrównoważona wydajność w większości warunków, ale nieoptymalne w ekstremalnym błocie lub śniegu
+  --- Błotne: Najlepsza przyczepność na błotnistych polach, ale szybko się zużywają na drogach
+  --- Śniegowe: Najlepsza przyczepność na śniegu i lodzie, mniej skuteczne na suchym lub błotnistym podłożu
+  --- Drogowe: Maksymalna wydajność i trwałość na utwardzonych drogach, słaba wydajność w terenie
+  
+  - Zarządzanie oponami:
+  --- Łatwy podgląd, montaż i sprzedaż zestawów opon z menu zarządzania
+  --- Zobacz aktualny stan i wartość opon przed sprzedażą
+  --- Okna potwierdzeń zapobiegają przypadkowym zakupom lub sprzedaży
+  
+  - Realizm:
+  --- Wybór opon znacząco wpływa na kontrolę pojazdu, prędkość i bezpieczeństwo
+  --- Używanie nieodpowiednich opon w trudnych warunkach zwiększa ryzyko ugrzęźnięcia lub utraty kontroli
+  
+  - Github:
+  https://github.com/TheScrewUpTeam/fs25-seasonal-tires]]>
+		</pl>
 	</description>
 	<author>TheScrew-UpTeam</author>
-	<version>0.1.0</version>
+	<version>1.0.0.0</version>
 
 	<extraSourceFiles>
 		<sourceFile filename="src/registerTireManager.lua" />
 	</extraSourceFiles>
 	<iconFilename>icon_SeasonalTires.dds</iconFilename>
+	<multiplayer supported="true"/>
 
 	<l10n>
 		<text name="item_tmsTireAllSeasons">
