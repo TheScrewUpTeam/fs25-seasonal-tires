@@ -3,23 +3,12 @@
 --
 
 source(g_currentModDirectory .. "src/TireHUD.lua")
-source(g_currentModDirectory .. "src/TireManagerChangeTireEvent.lua")
+source(g_currentModDirectory .. "src/TireStorage.lua")
+source(g_currentModDirectory .. "src/SeasonalTiresSwapEvent.lua")
+source(g_currentModDirectory .. "src/SeasonalTiresBuyEvent.lua")
+source(g_currentModDirectory .. "src/SeasonalTiresSellEvent.lua")
 
 if Utils == nil then Utils = {} end
----
--- Appends a function to another, calling both in order.
--- @param orig function|nil The original function.
--- @param toAdd function The function to append.
--- @return function The combined function.
-function Utils.appendedFunction(orig, toAdd)
-    if orig == nil then
-        return toAdd
-    end
-    return function(...)
-        orig(...)
-        toAdd(...)
-    end
-end
 
 function Utils.splitByUnderscore(str)
     local result = {}
@@ -82,22 +71,79 @@ TireManager.config = {
     frictionMax = 2.5,
     maxDistanceForWear = 150000, -- meters
 }
-TireManager.tireStorage = {
-    ["exampleVehicle"] = 
-    {
-        {
-            tireType = "allSeason",
-            wear = 0.5,
-            setId = "set1"
-        }
-    }
-}
 TireManager.baseTirePrice = {
     allSeason = 800,
     mud = 1100,
     snow = 950,
     road = 1000
 }
+
+-- ================================== Network Integration ==================================
+
+function TireManager.injOnReadStream(vehicle, streamId, connection)
+    if connection.isServer() or not TireManager.isWheelsVehicle(vehicle) then
+        return
+    end
+
+    -- Read tire type
+    local tireType = streamReadString(streamId)
+    if tireType and TireManager.tireTypes[tireType] then
+        vehicle.stTireType = tireType
+    else
+        vehicle.stTireType = "allSeason" -- Default to all-season if unknown
+    end
+
+    -- Read wheel distances and wear
+    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
+        wheel.stTireTravelled = streamReadFloat32(streamId) or 0.0
+        wheel.stTireWear = streamReadFloat32(streamId) or 0.0
+    end
+end
+Wheels.onReadStream = Utils.appendedFunction(Wheels.onReadStream, TireManager.injOnReadStream)
+
+function TireManager.injOnWriteStream(vehicle, streamId, connection)
+    if not connection.isServer() or not TireManager.isWheelsVehicle(vehicle) then
+        return
+    end
+
+    -- Write tire type
+    streamWriteString(streamId, vehicle.stTireType or "allSeason")
+
+    -- Write wheel distances and wear
+    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
+        streamWriteFloat32(streamId, wheel.stTireTravelled or 0.0)
+        streamWriteFloat32(streamId, wheel.stTireWear or 0.0)
+    end
+end
+Wheels.onWriteStream = Utils.appendedFunction(Wheels.onWriteStream, TireManager.injOnWriteStream)
+
+function TireManager.injOnWriteStreamUpdate(vehicle, streamId, connection)
+    if not connection.isServer() or not TireManager.isWheelsVehicle(vehicle) then
+        return
+    end
+
+    -- Write wheel distances and wear
+    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
+        streamWriteFloat32(streamId, wheel.stTireTravelled or 0.0)
+        streamWriteFloat32(streamId, wheel.stTireWear or 0.0)
+    end
+end
+Wheels.onReadUpdateStream = Utils.appendedFunction(Wheels.onReadUpdateStream, TireManager.injOnReadUpdateStream)
+
+function TireManager.injOnReadStreamUpdate(vehicle, streamId, connection)
+    if connection.isServer() or not TireManager.isWheelsVehicle(vehicle) then
+        return
+    end
+
+    -- Read wheel distances and wear
+    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
+        wheel.stTireTravelled = streamReadFloat32(streamId) or 0.0
+        wheel.stTireWear = streamReadFloat32(streamId) or 0.0
+    end
+end
+Wheels.onReadUpdateStream = Utils.appendedFunction(Wheels.onReadUpdateStream, TireManager.injOnReadUpdateStream)
+
+-- ================================================= Main Features ==================================
 
 function TireManager.getTireType(vehicle)
     return vehicle.stTireType or "allSeason"
@@ -109,6 +155,42 @@ function TireManager.setTireType(vehicle, tireType)
     else
         print(PRINT_PREFIX .. "Unknown tire type: " .. tostring(tireType))
     end
+end
+
+function TireManager.getTirePrice(wheel, tireType)
+    if not wheel or wheel == nil or wheel.physics.radius == nil then
+        return 0
+    end
+    local basePrice = TireManager.baseTirePrice[tireType]
+    local price = basePrice * wheel.physics.radius
+    return price
+end
+
+function TireManager.getTireSetPrice(vehicle, tireType)
+    if not vehicle or not vehicle.spec_wheels or not vehicle.spec_wheels.wheels then
+        return 0
+    end
+    local totalPrice = 0
+    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
+        totalPrice = totalPrice + TireManager.getTirePrice(wheel, tireType)
+    end
+    return totalPrice
+end
+
+function TireManager.getTireSetSellPrice(vehicle, setId)
+    local storedSet = TireStorage.getStoredBySetId(vehicle, setId)
+    if not storedSet then
+        print(PRINT_PREFIX .. "No stored tire set found with ID: " .. tostring(setId))
+        return 0
+    end
+    local tireType = storedSet.tireType
+    local wear = storedSet.wear or 0.0
+    local basePrice = 0
+    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
+        basePrice = basePrice + TireManager.getTirePrice(wheel, tireType)
+    end
+    local sellPrice = basePrice * (1 - wear) * 0.8 -- Adjust price based on wear
+    return sellPrice
 end
 
 function TireManager.isWheelsVehicle(vehicle)
@@ -355,150 +437,14 @@ function TireManager.consoleSetTireType(self, tireType)
 end
 addConsoleCommand("tmSetTireType", "Set tire type on selected vehicle", "consoleSetTireType", TireManager)
 
--- =================================== Tire Storage =======================================================
-
-function TireManager.getStoredByVehicle(vehicle)
-   return TireManager.tireStorage[vehicle.configFileNameClean] or {} 
-end
-
-function TireManager.getStoredBySetId(vehicle, setId)
-    local sets = TireManager.tireStorage[vehicle.configFileNameClean]
-
-    for _, set in ipairs(sets) do
-        if set.setId == setId then
-            return set
-        end
-    end
-end
-
-function TireManager.getStoredByType(vehicle, tireType)
-    local results = {}
-
-    if vehicle == nil or tireType == nil then
-        return results
-    end
-
-    local vehicleModelId = vehicle.configFileNameClean
-    local sets = TireManager.tireStorage[vehicleModelId]
-
-    if sets == nil then
-        return results
-    end
-
-    for _, set in ipairs(sets) do
-        if set.tireType == tireType then
-            table.insert(results, set)
-        end
-    end
-
-    return results
-end
-
-function TireManager.getTirePrice(wheel, tireType)
-    if not wheel or wheel == nil or wheel.physics.radius == nil then
-        return 0
-    end
-    local basePrice = TireManager.baseTirePrice[tireType]
-    local price = basePrice * wheel.physics.radius
-    return price
-end
-
-function TireManager.getTireSetPrice(vehicle, tireType)
-    if not vehicle or not vehicle.spec_wheels or not vehicle.spec_wheels.wheels then
-        return 0
-    end
-    local totalPrice = 0
-    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
-        totalPrice = totalPrice + TireManager.getTirePrice(wheel, tireType)
-    end
-    return totalPrice
-end
-
-function TireManager.getTireSetSellPrice(vehicle, setId)
-    local storedSet = TireManager.getStoredBySetId(vehicle, setId)
-    if not storedSet then
-        print(PRINT_PREFIX .. "No stored tire set found with ID: " .. tostring(setId))
-        return 0
-    end
-    local tireType = storedSet.tireType
-    local wear = storedSet.wear or 0.0
-    local basePrice = 0
-    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
-        basePrice = basePrice + TireManager.getTirePrice(wheel, tireType)
-    end
-    local sellPrice = basePrice * (1 - wear) * 0.8 -- Adjust price based on wear
-    return sellPrice
-end
-
-function TireManager.removeFromStorage(vehicle, setId)
-    local vehicleModelId = vehicle.configFileNameClean
-    for i, set in ipairs(TireManager.tireStorage[vehicleModelId]) do
-        if set.setId == setId then
-            table.remove(TireManager.tireStorage[vehicleModelId], i)
-            return
-        end
-    end
-    print(PRINT_PREFIX .. string.format("Tire set '%s' not found in storage for vehicle '%s'", setId, vehicleModelId))
-end
-
-function TireManager.addToStoreage(vehicle, tireType, wear)
-    local vehicleModelId = vehicle.configFileNameClean
-    -- Ensure storage table exists
-    TireManager.tireStorage[vehicleModelId] = TireManager.tireStorage[vehicleModelId] or {}
-    
-    -- Create a new tire set
-    local newSet = {
-        tireType = tireType,
-        wear = wear or 0.0,  -- Default to brand new if not specified
-        setId = "set" .. #TireManager.tireStorage[vehicleModelId] + 1  -- Simple ID generation
-    }
-    
-    -- Add the new set to storage
-    table.insert(TireManager.tireStorage[vehicleModelId], newSet)
-end
-
-function TireManager.swapTires(vehicle, setId) 
-    local storedSet = TireManager.getStoredBySetId(vehicle, setId)
-    if not storedSet then
-        print(PRINT_PREFIX .. "No stored tire set found with ID: " .. tostring(setId))
-        return
-    end
-
-    -- Remove the set from storage
-    TireManager.removeFromStorage(vehicle, setId)
-
-    -- Add the old tires to storage
-    TireManager.addToStoreage(vehicle, TireManager.getTireType(vehicle), TireManager.getTireWear(vehicle))
-
-    -- Set the tire type on the vehicle
-    TireManager.setTireType(vehicle, storedSet.tireType)
-    TireManager.setTireWear(vehicle, storedSet.wear)
-end
-
 -- =================================== Change Tires =======================================================
-
-function TireManager.buyTires(vehicle, tireType)
-    local vehicleModelId = vehicle.configFileNameClean
-    -- Ensure storage table exists
-    if TireManager.tireStorage[vehicleModelId] == nil then
-        TireManager.tireStorage[vehicleModelId] = {}
-    end
-    -- Add the new tire set
-    local setId = "set" .. (#TireManager.tireStorage[vehicleModelId] + 1)
-    table.insert(TireManager.tireStorage[vehicleModelId], {
-        tireType = tireType,
-        wear = 0.0,
-        setId = setId
-    })
-    return setId
-end
 
 function TireManager.onReplaceTyresCallback(screen)
     if (TireManager.isWheelsVehicle(screen.vehicle) == false) then
         return false
     end
 
-    local storedTires = TireManager.getStoredByVehicle(screen.vehicle)
+    local storedTires = TireStorage.getStoredByVehicle(screen.vehicle)
 
     local tireKeys = {}
     local options = {}
@@ -540,7 +486,8 @@ function TireManager.onReplaceTyresCallback(screen)
             if parts[1] == "stored" then
                 -- Use existing stored tire set
                 local setId = parts[2]
-                TireManager.swapTires(screen.vehicle, setId)
+                -- TireManager.swapTires(screen.vehicle, setId)
+                g_client:getServerConnection():sendEvent(StSwapEvent.new(screen.vehicle, setId))
             end
 
             local function onAgreedBuyTiresCallback(screen, isYes)
@@ -551,10 +498,8 @@ function TireManager.onReplaceTyresCallback(screen)
                         return
                     end
 
-                    g_currentMission:addMoney(-tyresPrice, screen.vehicle:getOwnerFarmId(), MoneyType.VEHICLE_REPAIR, true, true)
-                    local setId = TireManager.buyTires(screen.vehicle, parts[2])
-                    TireManager.swapTires(screen.vehicle, setId)
-                    -- g_client:getServerConnection():sendEvent(UytReplaceEvent.new(screen.vehicle, tyresPrice))
+                    g_client:getServerConnection():sendEvent(StBuyEvent.new(screen.vehicle, parts[2]))
+                    TireManager.injWokshopScreenSetVehicle(screen, screen.vehicle) -- Refresh the vehicle state
                 end
             end
             
@@ -576,7 +521,7 @@ function TireManager.onManageTiresCallback(screen)
         return false
     end
 
-    local storedTires = TireManager.getStoredByVehicle(screen.vehicle)
+    local storedTires = TireStorage.getStoredByVehicle(screen.vehicle)
     if #storedTires == 0 then
         return false
     end
@@ -598,18 +543,14 @@ function TireManager.onManageTiresCallback(screen)
             g_shopConfigScreen:playSample(GuiSoundPlayer.SOUND_SAMPLES.YES)
             local setId = tireKeys[result]
             
-            local stored = TireManager.getStoredBySetId(screen.vehicle, setId)
+            local stored = TireStorage.getStoredBySetId(screen.vehicle, setId)
             local setData = TireManager.tireTypes[stored.tireType]
 
             local function onAgreedSellTiresCallback(screen, isYes)
                 if isYes then
-                    local tiresPrice =  TireManager.getTireSetSellPrice(screen.vehicle, setId)
                     
-                    g_currentMission:addMoney(tiresPrice, screen.vehicle:getOwnerFarmId(), MoneyType.VEHICLE_REPAIR, true, true)
-                    TireManager.removeFromStorage(screen.vehicle, setId)
-                    g_shopConfigScreen:playSample(GuiSoundPlayer.SOUND_SAMPLES.YES)
-                    TireManager.injWokshopScreenSetVehicle(screen, screen.vehicle)
-                    -- g_client:getServerConnection():sendEvent(UytReplaceEvent.new(screen.vehicle, tyresPrice))
+                    g_client:getServerConnection():sendEvent(StSellEvent.new(screen.vehicle, setId))
+                    TireManager.injWokshopScreenSetVehicle(screen, screen.vehicle) -- Refresh the vehicle state
                 end
             end
             
@@ -617,8 +558,6 @@ function TireManager.onManageTiresCallback(screen)
             local dialogString = string.format(g_i18n:getText("ui_tmsTireSellConfirmation"), setData.name, g_i18n:formatMoney(price, 0, true, true))
             local dialogSound = GuiSoundPlayer.SOUND_SAMPLES.CONFIG_WRENCH
             YesNoDialog.show(onAgreedSellTiresCallback, screen, dialogString, nil, nil, nil, nil, dialogSound)
-        else
-            -- g_shopConfigScreen:playSample(GuiSoundPlayer.SOUND_SAMPLES.ERROR)
         end
     end, g_i18n:getText("ui_tmsSelectTireSetForSellDescription"), g_i18n:getText("ui_tmsSellTireSetDialogTitle"), options, defaultIndex)
 	return true
@@ -637,7 +576,7 @@ function TireManager.injWokshopScreenSetVehicle(screen, vehicle)
         screen.tmsManageBtn:setDisabled(true)
 	else
 		screen.tmsBtn:setDisabled(false)
-        local stored = TireManager.getStoredByVehicle(vehicle)
+        local stored = TireStorage.getStoredByVehicle(vehicle)
         if #stored > 0 then
             screen.tmsManageBtn:setText(string.format(g_i18n:getText("ui_tmsManageTiresButtonTrue"), #stored))
             screen.tmsManageBtn:setDisabled(false)
@@ -756,49 +695,6 @@ function TireManager.injWheelsOnLoadFinished(vehicle, savegame)
 	end
 end
 Wheels.onLoadFinished = Utils.appendedFunction(Wheels.onLoadFinished, TireManager.injWheelsOnLoadFinished)
-
-function TireManager:saveStorageToXml(xmlFile, key)
-    if TireManager.tireStorage == nil then TireManager.tireStorage = {} end
-
-    local index = 0
-    for vehicleId, tireList in pairs(TireManager.tireStorage) do
-        for _, data in ipairs(tireList) do
-            local entryKey = string.format("%s.storedTireSets(%d)", key, index)
-            xmlFile:setString(entryKey .. "#vehicleId", vehicleId)
-            xmlFile:setString(entryKey .. "#tireType", data.tireType)
-            xmlFile:setFloat(entryKey .. "#wear", data.wear)
-            xmlFile:setString(entryKey .. "#setId", data.setId)
-            index = index + 1
-        end
-    end
-end
-Farm.saveToXMLFile = Utils.appendedFunction(Farm.saveToXMLFile, TireManager.saveStorageToXml)
-
-function TireManager:loadStorageFromXML(superFunc, xmlFile, key)
-    local returnValue = superFunc(self, xmlFile, key)
-
-    TireManager.tireStorage = {}
-
-    xmlFile:iterate(key .. ".storedTireSets", function (_, entryKey)
-        local vehicleId = xmlFile:getString(entryKey .. "#vehicleId", "")
-
-        if vehicleId ~= nil and vehicleId ~= "" then
-            local tireData = {
-                tireType = xmlFile:getString(entryKey .. "#tireType", "allSeason"),
-                wear = xmlFile:getFloat(entryKey .. "#wear", 0),
-                setId = xmlFile:getString(entryKey .. "#setId", "set0")
-            }
-
-            if TireManager.tireStorage[vehicleId] == nil then
-                    TireManager.tireStorage[vehicleId] = {}
-                end
-
-            table.insert(TireManager.tireStorage[vehicleId], tireData)
-        end
-    end)
-    return returnValue
-end
-Farm.loadFromXMLFile = Utils.overwrittenFunction(Farm.loadFromXMLFile, TireManager.loadStorageFromXML)
 
 function TireManager.injVehicleInit()
 	Vehicle.xmlSchemaSavegame:register(XMLValueType.STRING, "vehicles.vehicle(?).wheels#tmsTireType", "Season Tires Mod Tire Type")
