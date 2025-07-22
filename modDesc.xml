@@ -3,13 +3,16 @@
 		<en>Seasonal Tires</en>
 		<de>Saisonale Reifen</de>
 		<pl>Opony Sezonowe</pl>
+		<uk>Сезонні Шини</uk>
+		<fr>Pneus Saisonniers</fr>
+		<es>Neumáticos Estacionales</es>
 	</title>
 	<description>
 		<en>
 		<![CDATA[A comprehensive overhaul to the tire system, introducing seasonal and terrain-aware tires for enhanced realism and gameplay.
   
   Features:
-  
+  - Compatible with the UseYourTires mod for enhanced realism, but fully functional as a standalone mod
   - Adds four tire types: All Seasons, Mud, Snow, and Road tires, each with unique properties and optimal conditions
   - Tire performance dynamically changes based on weather, season, and ground conditions (e.g., snow, mud, rain, dry roads)
   - Switch and manage tire sets directly from the in-game menu
@@ -18,7 +21,8 @@
   - Realistic wear and tear: tires degrade faster if used in unsuitable conditions
   - Improved vehicle handling and traction depending on tire choice and environment
   - Customizable key bindings for quick tire management and change
-  - Fully localized UI and notifications
+  - Fully localized UI
+  - No changes in wheels visuals
   
   - Tire Types:
   --- All Seasons: Balanced performance for most conditions, but not optimal for extreme mud or snow
@@ -42,7 +46,7 @@
 		<![CDATA[Eine umfassende Überarbeitung des Reifensystems, die saisonale und geländespezifische Reifen für mehr Realismus und Spieltiefe einführt.
   
   Funktionen:
-  
+  - Kompatibel mit dem Mod UseYourTires für noch mehr Realismus, funktioniert aber auch eigenständig
   - Vier Reifentypen: Allwetter-, Schlamm-, Schnee- und Straßenreifen, jeweils mit eigenen Eigenschaften und optimalen Einsatzbereichen
   - Reifenleistung ändert sich dynamisch je nach Wetter, Jahreszeit und Untergrund (z.B. Schnee, Schlamm, Regen, trockene Straßen)
   - Reifenwechsel und -verwaltung direkt im Spielmenü
@@ -75,7 +79,7 @@
 		<![CDATA[Kompleksowa przebudowa systemu opon, wprowadzająca sezonowe i terenowe opony dla większego realizmu i lepszej rozgrywki.
   
   Funkcje:
-  
+  - Kompatybilny z modem UseYourTires dla większego realizmu, ale działa również samodzielnie
   - Cztery typy opon: całoroczne, błotne, śniegowe i drogowe, każda z unikalnymi właściwościami i optymalnymi warunkami użycia
   - Wydajność opon dynamicznie zmienia się w zależności od pogody, pory roku i warunków podłoża (np. śnieg, błoto, deszcz, suche drogi)
   - Zmieniaj i zarządzaj zestawami opon bezpośrednio z menu gry
@@ -104,6 +108,110 @@
   - Github:
   https://github.com/TheScrewUpTeam/fs25-seasonal-tires]]>
 		</pl>
+		<uk>
+		<![CDATA[Комплексне оновлення системи шин, що впроваджує сезонні та адаптовані до типу ґрунту шини для більшого реалізму та ігрового процесу.
+  
+  Особливості:
+  - Сумісний із модом UseYourTires для підвищення реалізму, але повністю працює і як окремий мод
+  - Додає чотири типи шин: всесезонні, для бруду, зимові та дорожні, кожна з унікальними властивостями та оптимальними умовами
+  - Характеристики шин динамічно змінюються залежно від погоди, сезону та стану ґрунту (наприклад, сніг, бруд, дощ, суха дорога)
+  - Заміна та керування комплектами шин безпосередньо з ігрового меню
+  - Зберігайте, купуйте та продавайте комплекти шин для своїх транспортних засобів
+  - Візуальні індикатори та іконки для кожного типу шин
+  - Реалістичне зношування: шини зношуються швидше при використанні в невідповідних умовах
+  - Покращене керування та зчеплення залежно від вибору шин та середовища
+  - Налаштовувані гарячі клавіші для швидкого керування шинами
+  - Повністю локалізований інтерфейс
+  - Без змін у візуальному вигляді коліс
+  
+  - Типи шин:
+  --- Всесезонні: збалансована продуктивність для більшості умов, але не оптимальні для екстремального бруду чи снігу
+  --- Для бруду: найкраще зчеплення на брудних полях, але швидко зношуються на дорогах
+  --- Зимові: найкраще зчеплення на снігу та льоду, менш ефективні на сухому чи брудному ґрунті
+  --- Дорожні: максимальна ефективність і довговічність на асфальті, погані поза дорогою
+  
+  - Керування шинами:
+  --- Легко переглядайте, встановлюйте та продавайте комплекти шин у меню керування
+  --- Переглядайте стан і вартість шин перед продажем
+  --- Діалоги підтвердження для запобігання випадковим покупкам чи продажам
+  
+  - Реалізм:
+  --- Вибір шин суттєво впливає на керування, швидкість і безпеку транспортного засобу
+  --- Використання невідповідних шин у складних умовах підвищує ризик застрягти або втратити контроль
+  
+  - Github:
+  https://github.com/TheScrewUpTeam/fs25-seasonal-tires]]>
+		</uk>
+		<fr>
+		<![CDATA[Refonte complète du système de pneus, introduisant des pneus saisonniers et adaptés au terrain pour un réalisme et une expérience de jeu accrus.
+  
+  Fonctionnalités :
+  - Compatible avec le mod UseYourTires pour un réalisme renforcé, mais fonctionne parfaitement de manière autonome
+  
+  - Ajoute quatre types de pneus : toutes saisons, boue, neige et route, chacun avec des propriétés uniques et des conditions optimales
+  - Les performances des pneus évoluent dynamiquement selon la météo, la saison et l’état du sol (neige, boue, pluie, routes sèches, etc.)
+  - Changez et gérez vos jeux de pneus directement depuis le menu du jeu
+  - Stockez, achetez et vendez des jeux de pneus pour vos véhicules
+  - Indicateurs visuels et icônes pour chaque type de pneu
+  - Usure réaliste : les pneus s’usent plus vite s’ils sont utilisés dans des conditions inadaptées
+  - Maniabilité et traction améliorées selon le choix des pneus et l’environnement
+  - Raccourcis clavier personnalisables pour une gestion rapide des pneus
+  - Interface entièrement traduite
+  - Aucun changement visuel sur les roues
+  
+  - Types de pneus :
+  --- Toutes saisons : performance équilibrée pour la plupart des conditions, mais pas optimale pour la boue ou la neige extrême
+  --- Boue : excellente traction dans les champs boueux, mais s’use rapidement sur route
+  --- Neige : meilleure adhérence sur neige et glace, moins efficace sur sol sec ou boueux
+  --- Route : efficacité et durabilité maximales sur route, mauvaise performance hors route
+  
+  - Gestion des pneus :
+  --- Consultez, installez et vendez facilement vos jeux de pneus depuis le menu dédié
+  --- Vérifiez l’état et la valeur des pneus avant de vendre
+  --- Fenêtres de confirmation pour éviter les achats ou ventes accidentels
+  
+  - Réalisme :
+  --- Le choix des pneus influence fortement le contrôle, la vitesse et la sécurité du véhicule
+  --- Utiliser des pneus inadaptés dans des conditions difficiles augmente le risque de rester bloqué ou de perdre le contrôle
+  
+  - Github :
+  https://github.com/TheScrewUpTeam/fs25-seasonal-tires]]>
+		</fr>
+		<es>
+		<![CDATA[Una revisión del sistema de neumáticos, que introduce neumáticos estacionales y adaptados al terreno para mayor realismo y jugabilidad.
+  
+  Características:
+  - Compatible con el mod UseYourTires para mayor realismo, pero funciona perfectamente como mod independiente
+  
+  - Añade cuatro tipos de neumáticos: todas las estaciones, barro, nieve y carretera, cada uno con propiedades únicas y condiciones óptimas
+  - El rendimiento de los neumáticos cambia dinámicamente según el clima, la estación y el estado del suelo (por ejemplo, nieve, barro, lluvia, carreteras secas)
+  - Cambia y gestiona los juegos de neumáticos directamente desde el menú del juego
+  - Almacena, compra y vende juegos de neumáticos para tus vehículos
+  - Indicadores visuales e iconos para cada tipo de neumático
+  - Desgaste realista: los neumáticos se desgastan más rápido si se usan en condiciones inadecuadas
+  - Mejor manejo y tracción según la elección de neumáticos y el entorno
+  - Atajos de teclado personalizables para una gestión rápida de los neumáticos
+  - Interfaz totalmente localizada
+  - Sin cambios visuales en las ruedas
+  
+  - Tipos de neumáticos:
+  --- Todas las estaciones: rendimiento equilibrado para la mayoría de condiciones, pero no óptimo para barro o nieve extremos
+  --- Barro: tracción superior en campos embarrados, pero se desgasta rápidamente en carretera
+  --- Nieve: mejor agarre en nieve y hielo, menos eficaz en suelo seco o embarrado
+  --- Carretera: máxima eficiencia y durabilidad en asfalto, mal rendimiento fuera de carretera
+  
+  - Gestión de neumáticos:
+  --- Visualiza, instala y vende fácilmente juegos de neumáticos desde el menú de gestión
+  --- Consulta el estado y valor de los neumáticos antes de vender
+  --- Diálogos de confirmación para evitar compras o ventas accidentales
+  
+  - Realismo:
+  --- La elección de neumáticos afecta significativamente el control, la velocidad y la seguridad del vehículo
+  --- Usar neumáticos inadecuados en condiciones difíciles aumenta el riesgo de atascarse o perder el control
+  
+  - Github:
+  https://github.com/TheScrewUpTeam/fs25-seasonal-tires]]>
+		</es>
 	</description>
 	<author>TheScrew-UpTeam</author>
 	<version>1.0.0.0</version>
@@ -119,98 +227,155 @@
 			<en>All Seasons</en>
 			<de>Alle Jahreszeiten</de>
 			<pl>Wszystkie sezony</pl>
+			<uk>Всесезонні</uk>
+			<fr>Toutes saisons</fr>
+			<es>Todas las estaciones</es>
 		</text>
 		<text name="item_tmsTireMud">
 			<en>Mud Tire</en>
 			<de>Schlammreifen</de>
 			<pl>Opona błotna</pl>
+			<uk>Шини для бруду</uk>
+			<fr>Pneu boue</fr>
+			<es>Neumático de barro</es>
 		</text>
 		<text name="item_tmsTireSnow">
 			<en>Snow Tire</en>
 			<de>Schneereifen</de>
 			<pl>Opona śniegowa</pl>
+			<uk>Зимові шини</uk>
+			<fr>Pneu neige</fr>
+			<es>Neumático de nieve</es>
 		</text>
 		<text name="item_tmsTireRoad">
 			<en>Road Tire</en>
 			<de>Straßenreifen</de>
 			<pl>Opona drogowa</pl>
+			<uk>Дорожні шини</uk>
+			<fr>Pneu route</fr>
+			<es>Neumático de carretera</es>
 		</text>
 
 		<text name="ui_tmsTireInstalled">
 			<en>%s (Installed)</en>
 			<de>%s (Installiert)</de>
 			<pl>%s (Zainstalowane)</pl>
+			<uk>%s (Встановлено)</uk>
+			<fr>%s (Installé)</fr>
+			<es>%s (Instalado)</es>
 		</text>
 		<text name="ui_tmsTireOwned">
 			<en>%s (Owned %d%%)</en>
 			<de>%s (Besitzt %d%%)</de>
 			<pl>%s (Posiadane %d%%)</pl>
+			<uk>%s (Власність %d%%)</uk>
+			<fr>%s (Possédé %d%%)</fr>
+			<es>%s (Propiedad %d%%)</es>
 		</text>
 		<text name="ui_tmsTireNew">
 			<en>%s (Buy for %s)</en>
 			<de>%s (Kaufen für %s)</de>
 			<pl>%s (Kup za %s)</pl>
+			<uk>%s (Купити за %s)</uk>
+			<fr>%s (Acheter pour %s)</fr>
+			<es>%s (Comprar por %s)</es>
 		</text>
 		<text name="ui_tmsBuyNewTireConfirm">
 			<en>Buy new set of tires for %s?</en>
 			<de>Neuen Reifensatz für %s kaufen?</de>
 			<pl>Kupić nowy zestaw opon za %s?</pl>
+			<uk>Купити новий комплект шин для %s?</uk>
+			<fr>Acheter un nouveau jeu de pneus pour %s ?</fr>
+			<es>¿Comprar un nuevo juego de neumáticos para %s?</es>
 		</text>
 		<text name="ui_tmsSelectTireSet">
 			<en>Select the tire set you want to install:</en>
 			<de>Wählen Sie den Reifensatz, den Sie installieren möchten:</de>
 			<pl>Wybierz zestaw opon do zamontowania:</pl>
+			<uk>Виберіть комплект шин для встановлення:</uk>
+			<fr>Sélectionnez le jeu de pneus à installer :</fr>
+			<es>Seleccione el juego de neumáticos que desea instalar:</es>
 		</text>
 		<text name="ui_tmsTireReplacementDalogTitle">
 			<en>TIRES REPLACEMENT</en>
 			<de>REIFENWECHSEL</de>
 			<pl>WYMIANA OPON</pl>
+			<uk>ЗАМІНА ШИН</uk>
+			<fr>REMPLACEMENT DES PNEUS</fr>
+			<es>CAMBIO DE NEUMÁTICOS</es>
 		</text>
 		<text name="ui_tmsSelectTireSetForSell">
 			<en>%s (%d%% - Sell for %s)</en>
 			<de>%s (%d%% - Verkaufen für %s)</de>
 			<pl>%s (%d%% - Sprzedaj za %s)</pl>
+			<uk>%s (%d%% - Продати за %s)</uk>
+			<fr>%s (%d%% - Vendre pour %s)</fr>
+			<es>%s (%d%% - Vender por %s)</es>
 		</text>
 		<text name="ui_tmsTireSellConfirmation">
 			<en>Sell set of %s tires for %s?</en>
 			<de>Satz %s Reifen für %s verkaufen?</de>
 			<pl>Sprzedać zestaw opon %s za %s?</pl>
+			<uk>Продати комплект шин %s за %s?</uk>
+			<fr>Vendre le jeu de pneus %s pour %s ?</fr>
+			<es>¿Vender el juego de neumáticos %s por %s?</es>
 		</text>
 		<text name="ui_tmsSelectTireSetForSellDescription">
 			<en>Select a tire set to sell:</en>
 			<de>Wählen Sie einen Reifensatz zum Verkaufen:</de>
 			<pl>Wybierz zestaw opon do sprzedaży:</pl>
+			<uk>Виберіть комплект шин для продажу:</uk>
+			<fr>Sélectionnez un jeu de pneus à vendre :</fr>
+			<es>Seleccione un juego de neumáticos para vender:</es>
 		</text>
 		<text name="ui_tmsSellTireSetDialogTitle">
 			<en>SELL TIRE SET</en>
 			<de>REIFENSATZ VERKAUFEN</de>
 			<pl>SPRZEDAŻ ZESTAWU OPON</pl>
+			<uk>ПРОДАЖ КОМПЛЕКТУ ШИН</uk>
+			<fr>VENTE DE JEU DE PNEUS</fr>
+			<es>VENTA DE JUEGO DE NEUMÁTICOS</es>
 		</text>
 		<text name="ui_tmsManageTiresButtonTrue">
 			<en>Manage tires (%d)</en>
 			<de>Reifen verwalten (%d)</de>
 			<pl>Zarządzaj oponami (%d)</pl>
+			<uk>Керування шинами (%d)</uk>
+			<fr>Gérer les pneus (%d)</fr>
+			<es>Gestionar neumáticos (%d)</es>
 		</text>
 		<text name="ui_tmsManageTiresButtonFalse">
 			<en>Manage tires</en>
 			<de>Reifen verwalten</de>
 			<pl>Zarządzaj oponami</pl>
+			<uk>Керування шинами</uk>
+			<fr>Gérer les pneus</fr>
+			<es>Gestionar neumáticos</es>
 		</text>
 		<text name="ui_tmsChangeTiresButton">
 			<en>Change tires</en>
 			<de>Reifen wechseln</de>
 			<pl>Zmień opony</pl>
+			<uk>Змінити шини</uk>
+			<fr>Changer les pneus</fr>
+			<es>Cambiar neumáticos</es>
 		</text>
 
 		<text name="input_TMS_CHANGE_TIRES">
 			<en>Change Tires</en>
 			<de>Reifen wechseln</de>
 			<pl>Zmień opony</pl>
+			<uk>Змінити шини</uk>
+			<fr>Changer les pneus</fr>
+			<es>Cambiar neumáticos</es>
 		</text>
 		<text name="input_TMS_MANAGE_TIRES">
 			<en>Manage Tires Storage</en>
 			<de>Reifenlager verwalten</de>
 			<pl>Zarządzaj magazynem opon</pl>
+			<uk>Керування складом шин</uk>
+			<fr>Gérer le stockage des pneus</fr>
+			<es>Gestionar el almacenamiento de neumáticos</es>
 		</text>
 	</l10n>
 
