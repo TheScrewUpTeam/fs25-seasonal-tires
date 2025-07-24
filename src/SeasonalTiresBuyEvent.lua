@@ -26,15 +26,13 @@ end
 
 function StBuyEvent.run(self, connection)
     if not connection:getIsServer() then
-        g_server:broadcastEvent(StBuyEvent.new(self.vehicle, self.tireType), nil, nil, self.vehicle)
+        g_server:broadcastEvent(self)
     end
     -- Actual buy logic
-    local price = TireManager.getTireSetPrice(self.vehicle, self.tireType)
-    if g_currentMission:getMoney() >= price then
+    if self.vehicle.isServer then
+        local price = TireManager.getTireSetPrice(self.vehicle, self.tireType)
         g_currentMission:addMoney(-price, self.vehicle:getOwnerFarmId(), MoneyType.VEHICLE_REPAIR, true, true)
-        local setId = TireStorage.buyTires(self.vehicle, self.tireType)
-        TireStorage.swapTires(self.vehicle, setId)
-    else
-        -- Not enough money, do nothing or show error
     end
+    local setId = TireStorage.buyTires(self.vehicle, self.tireType)
+    TireStorage.swapTires(self.vehicle, setId)
 end 

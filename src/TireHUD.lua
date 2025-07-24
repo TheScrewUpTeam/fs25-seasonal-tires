@@ -1,5 +1,3 @@
-print("[TireHUD] file loaded")
-
 local HUD_X = 0.715 -- right side
 local HUD_Y = 0.028 -- low on screen
 local HUD_WIDTH = 0.125

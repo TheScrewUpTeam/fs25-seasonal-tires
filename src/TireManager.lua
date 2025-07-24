@@ -33,34 +33,64 @@ TireManager.tireTypes = {
     allSeason = {
         name = g_i18n:getText("item_tmsTireAllSeasons"),
         frictionModifier = 1.0,
+        rainBonus = -0.1,
+        snowBonus = -0.3,
+        softnessBonus = -0.3,
+        mudCluggPenalty = 0.2,
+
         fieldBonus = -0.4,
         roadBonus = 0.0,
-        snowBonus = -0.4,
-        wearRate = 1.0
+        wearRate = 1.0,
     },
     mud = {
         name = g_i18n:getText("item_tmsTireMud"),
         frictionModifier = 1.0,
+        rainBonus = 0,
+        snowBonus = -0.2,
+        softnessBonus = 1,
+        tempPenalty = {
+            suitableMin = 0,
+            suitableMax = 50,
+            penaltyFactor = 0.01,
+        },
+
         fieldBonus = 0.4,
         roadBonus = -0.1,
-        snowBonus = -0.2,
-        wearRate = 1.5
+        wearRate = 1.5,
     },
     snow = {
         name = g_i18n:getText("item_tmsTireSnow"),
         frictionModifier = 1.0,
+        rainBonus = -0.1,
+        snowBonus = -0.05,
+        softnessBonus = 0.0,
+        mudCluggPenalty = 0.1,
+        tempPenalty = {
+            suitableMin = -50,
+            suitableMax = 2,
+            penaltyFactor = 0.02,
+        },
+
         fieldBonus = -0.3,
         roadBonus = -0.1,
-        snowBonus = 0.5,
-        wearRate = 1.3
+        wearRate = 1.3,
     },
     road = {
         name = g_i18n:getText("item_tmsTireRoad"),
-        frictionModifier = 1.1,
+        frictionModifier = 1.0,
+        rainBonus = -0.1,
+        snowBonus = -0.6,
+        softnessBonus = -0.7,
+        mudCluggPenalty = 0.3,
+        tempPenalty = {
+            suitableMin = -10,
+            suitableMax = 20,
+            penaltyFactor = 0.01,
+        }, 
+
         fieldBonus = -0.5,
         roadBonus = 0.5,
-        snowBonus = -0.6,
-        wearRate = 0.8
+        wearRate = 0.8,
     }
 }
 TireManager.config = {
@@ -68,7 +98,7 @@ TireManager.config = {
     snowMultiplier = 2.0,
     rainPenalty = 0.8,
     frictionMin = 0.2,
-    frictionMax = 2.5,
+    frictionMax = 1.6,
     maxDistanceForWear = 150000, -- meters
 }
 TireManager.baseTirePrice = {
@@ -81,7 +111,7 @@ TireManager.baseTirePrice = {
 -- ================================== Network Integration ==================================
 
 function TireManager.injOnReadStream(vehicle, streamId, connection)
-    if connection.isServer() or not TireManager.isWheelsVehicle(vehicle) then
+    if connection.isServer or not TireManager.isWheelsVehicle(vehicle) then
         return
     end
 
@@ -102,7 +132,7 @@ end
 Wheels.onReadStream = Utils.appendedFunction(Wheels.onReadStream, TireManager.injOnReadStream)
 
 function TireManager.injOnWriteStream(vehicle, streamId, connection)
-    if not connection.isServer() or not TireManager.isWheelsVehicle(vehicle) then
+    if not connection.isServer or not TireManager.isWheelsVehicle(vehicle) then
         return
     end
 
@@ -118,7 +148,7 @@ end
 Wheels.onWriteStream = Utils.appendedFunction(Wheels.onWriteStream, TireManager.injOnWriteStream)
 
 function TireManager.injOnWriteStreamUpdate(vehicle, streamId, connection)
-    if not connection.isServer() or not TireManager.isWheelsVehicle(vehicle) then
+    if not connection.isServer or not TireManager.isWheelsVehicle(vehicle) then
         return
     end
 
@@ -128,10 +158,10 @@ function TireManager.injOnWriteStreamUpdate(vehicle, streamId, connection)
         streamWriteFloat32(streamId, wheel.stTireWear or 0.0)
     end
 end
-Wheels.onReadUpdateStream = Utils.appendedFunction(Wheels.onReadUpdateStream, TireManager.injOnReadUpdateStream)
+Wheels.onWriteUpdateStream = Utils.appendedFunction(Wheels.onWriteUpdateStream, TireManager.injOnWriteStreamUpdate)
 
-function TireManager.injOnReadStreamUpdate(vehicle, streamId, connection)
-    if connection.isServer() or not TireManager.isWheelsVehicle(vehicle) then
+function TireManager.injOnReadStreamUpdate(vehicle, streamId, _, connection)
+    if connection.isServer or not TireManager.isWheelsVehicle(vehicle) then
         return
     end
 
@@ -141,7 +171,7 @@ function TireManager.injOnReadStreamUpdate(vehicle, streamId, connection)
         wheel.stTireWear = streamReadFloat32(streamId) or 0.0
     end
 end
-Wheels.onReadUpdateStream = Utils.appendedFunction(Wheels.onReadUpdateStream, TireManager.injOnReadUpdateStream)
+Wheels.onReadUpdateStream = Utils.appendedFunction(Wheels.onReadUpdateStream, TireManager.injOnReadStreamUpdate)
 
 -- ================================================= Main Features ==================================
 
@@ -210,50 +240,6 @@ function TireManager.isWheelsVehicle(vehicle)
     return visualWheelsCount > 0
 end
 
-function TireManager.getEffectiveFriction(vehicle, physWheel)
-    local tireType = TireManager.getTireType(vehicle)
-    local tireData = TireManager.tireTypes[tireType] or TireManager.tireTypes["allSeason"]
-    local friction = tireData.frictionModifier or 1.0
-
-     -- Surface detection
-     local surface = "road"
-     if vehicle.getIsOnField and vehicle:getIsOnField() then
-         surface = "field"
-     end
-
-    local env = g_currentMission.environment
-    local isSnow = false
-    local isRain = false
-    local snowHeight = 0
-    if env.snowSystem then
-        local x, y, z = getWorldTranslation(vehicle.rootNode)
-        snowHeight = env.snowSystem:getSnowHeightAtWorldPos(x, y, z)
-    end
-    if env.weather:getIsSnowing() or snowHeight > 0.05 then
-        isSnow = true
-    end
-    if env.weather:getIsRaining() then
-        isRain = true
-    end
-
-    -- Apply bonuses/penalties (configurable, per surface)
-    local bonus = 0
-    if surface == "field" then bonus = tireData.fieldBonus or 0
-    elseif surface == "road" then bonus = tireData.roadBonus or 0
-    end
-    friction = friction + bonus * (TireManager.surfaceConfig[surface] or 1.0)
-    if isSnow then
-        friction = friction + (tireData.snowBonus or 0) * TireManager.config.snowMultiplier
-    elseif isRain then
-        friction = friction * TireManager.config.rainPenalty
-    end
-    friction = friction * math.min(1 - TireManager.getTireWear(vehicle), .2) -- Apply wear factor
-
-    -- Clamp to config range
-    local clamped = math.max(TireManager.config.frictionMin, math.min(TireManager.config.frictionMax, friction))
-    return clamped
-end
-
 function TireManager:onLoad(savegame)
     FSBaseMission.registerEventListener(self, "draw", TireManager)
 end
@@ -265,7 +251,7 @@ function TireManager:draw()
     end
     if vehicle and TireManager.isWheelsVehicle(vehicle) then
         local tireData = {
-            name = TireManager.tireTypes[vehicle.stTireType].name,
+            name = TireManager.tireTypes[vehicle.stTireType or "allSeason"].name,
             wear = TireManager.getTireWear(vehicle),
             type = vehicle.stTireType
         }
@@ -303,13 +289,87 @@ function TireManager:draw()
     end
 end
 
+function TireManager.calculateFrictionByDepth(tireData, depth)
+    local base = tireData.frictionModifier
+    local slope = tireData.softnessBonus
+    return base + slope * depth
+end
+
+function TireManager.getTemperaturePenalty(temperature, tempPenalty)
+    if not tempPenalty then
+        return 0
+    end
+
+    local penalty = 0
+
+    if temperature < tempPenalty.suitableMin then
+        penalty = tempPenalty.suitableMin - temperature
+    elseif temperature > tempPenalty.suitableMax then
+        penalty = temperature - tempPenalty.suitableMax
+    end
+
+    if penalty > 0 then
+        local factor = penalty * tempPenalty.penaltyFactor
+        return math.abs(factor)
+    end
+
+    return 0
+end
+
+function TireManager.getEffectiveFriction(vehicle, physWheel)
+    local tireType = TireManager.getTireType(vehicle)
+    local tireData = TireManager.tireTypes[tireType]
+    if not tireData then
+        return 1.0 -- Default friction if unknown type
+    end
+    local groundDepth = physWheel.groundDepth or 0
+    local env = g_currentMission.environment
+    local temperature = env.weather.temperatureUpdater:getTemperatureAtTime(
+        g_currentMission.environment.dayTime
+    )
+
+    -- Base friction depending on tire and softness
+    local baseFriction = TireManager.calculateFrictionByDepth(tireData, groundDepth)
+    local snowBonus = 0
+    local tempPenalty = 0
+    local rainPenalty = 0
+    local mudCluggPenalty = 0
+    local wearFactor = math.min(TireManager.getTireWear(vehicle) * 3, 3)
+
+    -- Apply snow bonus if applicable
+    if physWheel.hasSnowContact then
+        snowBonus = (tireData.snowBonus or 0)
+    end
+
+    if env.weather:getIsRaining() then
+        rainPenalty = tireData.rainBonus
+    end
+
+     -- Apply temperature penalty if defined
+    if tireData.tempPenalty then
+        tempPenalty = TireManager.getTemperaturePenalty(temperature, tireData.tempPenalty)
+    end
+
+    -- Apply mud clugg pennalty if applicable
+    if tireData.mudCluggPenalty then 
+        mudCluggPenalty = tireData.mudCluggPenalty * physWheel.dirtAmount
+    end
+
+    local resultFriction = baseFriction + (snowBonus + rainPenalty - tempPenalty - mudCluggPenalty) * wearFactor
+
+    -- Clamp to config range
+    local clamped = math.max(TireManager.config.frictionMin, math.min(TireManager.config.frictionMax, resultFriction))
+
+    return clamped
+end
+
 function TireManager.injPhysWheelUpdateTireFriction(physWheel)
     local vehicle = physWheel.vehicle
     if not TireManager.isWheelsVehicle(vehicle) then return end
     if not vehicle.isServer or not vehicle.isAddedToPhysics then return end
     local frictionMod = TireManager.getEffectiveFriction(vehicle, physWheel)
     -- Use the game's base friction scale, but modulate it with our value
-    local frictionScale = (physWheel.frictionScale or 1) * (physWheel.tireGroundFrictionCoeff or 1) * frictionMod
+    local frictionScale = frictionMod --(physWheel.frictionScale or 1) * (physWheel.tireGroundFrictionCoeff or 1) * frictionMod
     setWheelShapeTireFriction(
         physWheel.wheel.node,
         physWheel.wheelShape,
@@ -373,6 +433,27 @@ function TireManager.setTireWear(vehicle, wear)
     end
 end
 
+function TireManager.getTireWearRate(wheel)
+    local tireDef = TireManager.tireTypes[TireManager.getTireType(wheel.vehicle)]
+    local baseWearRate = tireDef.wearRate
+    local groundDepth = wheel.physics.groundDepth or 0
+    local softnessBonus = tireDef.softnessBonus
+    local temperature = g_currentMission.environment.weather.temperatureUpdater:getTemperatureAtTime(
+        g_currentMission.environment.dayTime
+    )
+
+    local hardnessPenalty = 0
+    local tempPenalty = 0
+    if tireDef.tempPenalty then
+        tempPenalty = TireManager.getTemperaturePenalty(temperature, tireDef.tempPenalty)
+    end
+    if softnessBonus > 0 then
+        hardnessPenalty = math.abs((1 - groundDepth) * softnessBonus)
+    end
+
+    return baseWearRate + hardnessPenalty + tempPenalty
+end
+
 function TireManager.injUpdateWheelContact(physWheel)
     local vehicle = physWheel.vehicle
     if not vehicle or not TireManager.isWheelsVehicle(vehicle) then
@@ -381,15 +462,14 @@ function TireManager.injUpdateWheelContact(physWheel)
     local wheel = physWheel.wheel
     if not vehicle or not wheel then return end
 
+    TireManager.injPhysWheelUpdateTireFriction(physWheel)
+
     -- Detect UYT once
     if TireManager._uytDetected == nil then
         TireManager._uytDetected = (vehicle.uytHasTyres ~= nil)
     end
 
-    -- Tire type
-    local tireDef = TireManager.tireTypes[wheel.stTireType] or TireManager.tireTypes.allSeason
-    local wearRate = tireDef.wearRate
-
+    local wearRate = TireManager.getTireWearRate(wheel)
     -- Time delta
     local now = getTimeSec()
     wheel._lastUpdateTime = wheel._lastUpdateTime or now
@@ -416,7 +496,6 @@ function TireManager.injUpdateWheelContact(physWheel)
     end
 end
 WheelPhysics.updateContact = Utils.appendedFunction(WheelPhysics.updateContact, TireManager.injUpdateWheelContact)
-
 
 -- =================================== Console Commands =======================================================
 
@@ -666,6 +745,9 @@ end
 Wheels.saveToXMLFile = Utils.appendedFunction(Wheels.saveToXMLFile, TireManager.injWheelsSaveToXMLFile)
 
 function TireManager.injWheelsOnLoadFinished(vehicle, savegame)
+	if vehicle.spec_wheels == nil or savegame == nil then
+		return
+	end
 	if not TireManager.isWheelsVehicle(vehicle) then
 		return
 	end

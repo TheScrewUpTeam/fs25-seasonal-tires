@@ -15,13 +15,13 @@ end
 
 function StSellEvent.readStream(self, streamId, connection)
     self.vehicle = NetworkUtil.readNodeObject(streamId)
-    self.setId = streamReadFloat32(streamId)
+    self.setId = streamReadString(streamId)
     self:run(connection)
 end
 
 function StSellEvent.writeStream(self, streamId, connection)
     NetworkUtil.writeNodeObject(streamId, self.vehicle)
-    streamWriteFloat32(streamId, self.setId)
+    streamWriteString(streamId, self.setId)
 end
 
 function StSellEvent.run(self, connection)
@@ -29,8 +29,10 @@ function StSellEvent.run(self, connection)
         g_server:broadcastEvent(StSellEvent.new(self.vehicle, self.setId), nil, nil, self.vehicle)
     end
     -- Actual sell logic
-    local price = TireManager.getTireSetSellPrice(self.vehicle, self.setId)
-    g_currentMission:addMoney(price, self.vehicle:getOwnerFarmId(), MoneyType.VEHICLE_REPAIR, true, true)
+    if self.vehicle.isServer then
+        local price = TireManager.getTireSetSellPrice(self.vehicle, self.setId)
+        g_currentMission:addMoney(price, self.vehicle:getOwnerFarmId(), MoneyType.VEHICLE_REPAIR, true, true)
+    end
     TireStorage.removeFromStorage(self.vehicle, self.setId)
     -- Optionally update UI or state
 end 

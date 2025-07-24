@@ -15,14 +15,14 @@ end
 
 function StSwapEvent.readStream(self, streamId, connection)
 	self.vehicle = NetworkUtil.readNodeObject(streamId)
-	self.setId = streamReadFloat32(streamId)
+	self.setId = streamReadString(streamId)
 
     self:run(connection)
 end
 
 function StSwapEvent.writeStream(self, streamId, connection)
 	NetworkUtil.writeNodeObject(streamId, self.vehicle)
-	streamWriteFloat32(streamId, self.setId)
+	streamWriteString(streamId, self.setId)
 end
 
 function StSwapEvent.run(self, connection)
