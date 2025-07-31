@@ -220,7 +220,7 @@
 		<sourceFile filename="src/registerTireManager.lua" />
 	</extraSourceFiles>
 	<iconFilename>icon_SeasonalTires.dds</iconFilename>
-	<multiplayer supported="true"/>
+	<multiplayer supported="false"/>
 
 	<l10n>
 		<text name="item_tmsTireAllSeasons">

@@ -4,9 +4,6 @@
 
 source(g_currentModDirectory .. "src/TireHUD.lua")
 source(g_currentModDirectory .. "src/TireStorage.lua")
-source(g_currentModDirectory .. "src/SeasonalTiresSwapEvent.lua")
-source(g_currentModDirectory .. "src/SeasonalTiresBuyEvent.lua")
-source(g_currentModDirectory .. "src/SeasonalTiresSellEvent.lua")
 
 if Utils == nil then Utils = {} end
 
@@ -37,9 +34,6 @@ TireManager.tireTypes = {
         snowBonus = -0.3,
         softnessBonus = -0.3,
         mudCluggPenalty = 0.2,
-
-        fieldBonus = -0.4,
-        roadBonus = 0.0,
         wearRate = 1.0,
     },
     mud = {
@@ -53,9 +47,6 @@ TireManager.tireTypes = {
             suitableMax = 50,
             penaltyFactor = 0.01,
         },
-
-        fieldBonus = 0.4,
-        roadBonus = -0.1,
         wearRate = 1.5,
     },
     snow = {
@@ -70,9 +61,6 @@ TireManager.tireTypes = {
             suitableMax = 2,
             penaltyFactor = 0.02,
         },
-
-        fieldBonus = -0.3,
-        roadBonus = -0.1,
         wearRate = 1.3,
     },
     road = {
@@ -86,20 +74,14 @@ TireManager.tireTypes = {
             suitableMin = -10,
             suitableMax = 20,
             penaltyFactor = 0.01,
-        }, 
-
-        fieldBonus = -0.5,
-        roadBonus = 0.5,
+        },
         wearRate = 0.8,
     }
 }
 TireManager.config = {
-    mudMultiplier = 1.5,
-    snowMultiplier = 2.0,
-    rainPenalty = 0.8,
     frictionMin = 0.2,
     frictionMax = 1.6,
-    maxDistanceForWear = 150000, -- meters
+    maxDistanceForWear = 500000, -- meters
 }
 TireManager.baseTirePrice = {
     allSeason = 800,
@@ -108,72 +90,14 @@ TireManager.baseTirePrice = {
     road = 1000
 }
 
--- ================================== Network Integration ==================================
-
-function TireManager.injOnReadStream(vehicle, streamId, connection)
-    if connection.isServer or not TireManager.isWheelsVehicle(vehicle) then
-        return
-    end
-
-    -- Read tire type
-    local tireType = streamReadString(streamId)
-    if tireType and TireManager.tireTypes[tireType] then
-        vehicle.stTireType = tireType
-    else
-        vehicle.stTireType = "allSeason" -- Default to all-season if unknown
-    end
-
-    -- Read wheel distances and wear
-    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
-        wheel.stTireTravelled = streamReadFloat32(streamId) or 0.0
-        wheel.stTireWear = streamReadFloat32(streamId) or 0.0
-    end
-end
-Wheels.onReadStream = Utils.appendedFunction(Wheels.onReadStream, TireManager.injOnReadStream)
-
-function TireManager.injOnWriteStream(vehicle, streamId, connection)
-    if not connection.isServer or not TireManager.isWheelsVehicle(vehicle) then
-        return
-    end
-
-    -- Write tire type
-    streamWriteString(streamId, vehicle.stTireType or "allSeason")
-
-    -- Write wheel distances and wear
-    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
-        streamWriteFloat32(streamId, wheel.stTireTravelled or 0.0)
-        streamWriteFloat32(streamId, wheel.stTireWear or 0.0)
-    end
-end
-Wheels.onWriteStream = Utils.appendedFunction(Wheels.onWriteStream, TireManager.injOnWriteStream)
-
-function TireManager.injOnWriteStreamUpdate(vehicle, streamId, connection)
-    if not connection.isServer or not TireManager.isWheelsVehicle(vehicle) then
-        return
-    end
-
-    -- Write wheel distances and wear
-    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
-        streamWriteFloat32(streamId, wheel.stTireTravelled or 0.0)
-        streamWriteFloat32(streamId, wheel.stTireWear or 0.0)
-    end
-end
-Wheels.onWriteUpdateStream = Utils.appendedFunction(Wheels.onWriteUpdateStream, TireManager.injOnWriteStreamUpdate)
-
-function TireManager.injOnReadStreamUpdate(vehicle, streamId, _, connection)
-    if connection.isServer or not TireManager.isWheelsVehicle(vehicle) then
-        return
-    end
-
-    -- Read wheel distances and wear
-    for _, wheel in ipairs(vehicle.spec_wheels.wheels) do
-        wheel.stTireTravelled = streamReadFloat32(streamId) or 0.0
-        wheel.stTireWear = streamReadFloat32(streamId) or 0.0
-    end
-end
-Wheels.onReadUpdateStream = Utils.appendedFunction(Wheels.onReadUpdateStream, TireManager.injOnReadStreamUpdate)
-
 -- ================================================= Main Features ==================================
+
+function TireManager.injVehiclePostLoad(vehicle)
+    if TireManager.isWheelsVehicle(vehicle) and vehicle.stTireType == nil then
+        vehicle.stTireType = "allSeason" -- Default tire type
+    end
+end
+Vehicle.postLoad = Utils.appendedFunction(Vehicle.postLoad, TireManager.injVehiclePostLoad)
 
 function TireManager.getTireType(vehicle)
     return vehicle.stTireType or "allSeason"
@@ -267,10 +191,11 @@ function TireManager:draw()
         -- Only one child vehicle with tires
         if #allVehiclesWithtires == 1 then
             local subVehicle = allVehiclesWithtires[1]
+            local tireType = TireManager.getTireType(subVehicle)
             local addData = {
-                name = TireManager.tireTypes[subVehicle.stTireType].name,
+                name = TireManager.tireTypes[tireType].name,
                 wear = TireManager.getTireWear(subVehicle),
-                type = subVehicle.stTireType
+                type = tireType
             }
             TireHUD:drawAdditional(subVehicle, addData)
         end
@@ -279,7 +204,7 @@ function TireManager:draw()
             for _, subVehicle in ipairs(allVehiclesWithtires) do
                 if vehicle.getIsSelected ~= nil and subVehicle:getIsSelected() then
                     local addData = {
-                        name = TireManager.tireTypes[subVehicle.stTireType].name,
+                        name = TireManager.tireTypes[subVehicle.stTireType or 'allSeason'].name,
                         wear = TireManager.getTireWear(subVehicle),
                     }
                     TireHUD:drawAdditional(subVehicle, addData)
@@ -322,7 +247,8 @@ function TireManager.getEffectiveFriction(vehicle, physWheel)
     if not tireData then
         return 1.0 -- Default friction if unknown type
     end
-    local groundDepth = physWheel.groundDepth or 0
+
+    local groundDepth = physWheel.groundDepth
     local env = g_currentMission.environment
     local temperature = env.weather.temperatureUpdater:getTemperatureAtTime(
         g_currentMission.environment.dayTime
@@ -366,7 +292,7 @@ end
 function TireManager.injPhysWheelUpdateTireFriction(physWheel)
     local vehicle = physWheel.vehicle
     if not TireManager.isWheelsVehicle(vehicle) then return end
-    if not vehicle.isServer or not vehicle.isAddedToPhysics then return end
+    if not vehicle.isAddedToPhysics then return end
     local frictionMod = TireManager.getEffectiveFriction(vehicle, physWheel)
     -- Use the game's base friction scale, but modulate it with our value
     local frictionScale = frictionMod --(physWheel.frictionScale or 1) * (physWheel.tireGroundFrictionCoeff or 1) * frictionMod
@@ -454,13 +380,18 @@ function TireManager.getTireWearRate(wheel)
     return baseWearRate + hardnessPenalty + tempPenalty
 end
 
+function TireManager.getWearModifierFromMapSize()
+    local terrainSize = getTerrainSize(g_currentMission.terrainRootNode)
+    return terrainSize / 2048 -- Normalize to a base size of 2048
+end
+
 function TireManager.injUpdateWheelContact(physWheel)
     local vehicle = physWheel.vehicle
     if not vehicle or not TireManager.isWheelsVehicle(vehicle) then
         return
     end
     local wheel = physWheel.wheel
-    if not vehicle or not wheel then return end
+    if not wheel then return end
 
     TireManager.injPhysWheelUpdateTireFriction(physWheel)
 
@@ -484,6 +415,8 @@ function TireManager.injUpdateWheelContact(physWheel)
     local speed = vehicle.lastSpeed * 1000
     local dist = speed * dt
 
+    local maxDistance = TireManager.config.maxDistanceForWear * TireManager.getWearModifierFromMapSize()
+
     if TireManager._uytDetected then
         -- UYT installed — adjust its internal tracked distance
         wheel.uytTravelledDist = wheel.uytTravelledDist or 0
@@ -491,7 +424,7 @@ function TireManager.injUpdateWheelContact(physWheel)
     else
         -- No UYT — handle our own distance and wear
         wheel.stTireTravelled = (wheel.stTireTravelled or 0) + dist
-        local wearPerMeter = 1 / TireManager.config.maxDistanceForWear
+        local wearPerMeter = 1 / maxDistance
         wheel.stTireWear = math.min((wheel.stTireWear or 0) + dist * wearPerMeter * wearRate, 1.0)
     end
 end
@@ -565,8 +498,7 @@ function TireManager.onReplaceTyresCallback(screen)
             if parts[1] == "stored" then
                 -- Use existing stored tire set
                 local setId = parts[2]
-                -- TireManager.swapTires(screen.vehicle, setId)
-                g_client:getServerConnection():sendEvent(StSwapEvent.new(screen.vehicle, setId))
+                TireStorage.swapTires(screen.vehicle, setId)
             end
 
             local function onAgreedBuyTiresCallback(screen, isYes)
@@ -576,8 +508,10 @@ function TireManager.onReplaceTyresCallback(screen)
                         InfoDialog.show(g_i18n:getText("shop_messageNotEnoughMoneyToBuy"))
                         return
                     end
-
-                    g_client:getServerConnection():sendEvent(StBuyEvent.new(screen.vehicle, parts[2]))
+                    local price = TireManager.getTireSetPrice(screen.vehicle, parts[2])
+                    g_currentMission:addMoney(-price, screen.vehicle:getOwnerFarmId(), MoneyType.VEHICLE_REPAIR, true, true)
+                    local setId = TireStorage.buyTires(screen.vehicle, parts[2])
+                    TireStorage.swapTires(screen.vehicle, setId)
                     TireManager.injWokshopScreenSetVehicle(screen, screen.vehicle) -- Refresh the vehicle state
                 end
             end
@@ -627,8 +561,9 @@ function TireManager.onManageTiresCallback(screen)
 
             local function onAgreedSellTiresCallback(screen, isYes)
                 if isYes then
-                    
-                    g_client:getServerConnection():sendEvent(StSellEvent.new(screen.vehicle, setId))
+                    local price = TireManager.getTireSetSellPrice(screen.vehicle, setId)
+                    g_currentMission:addMoney(price, screen.vehicle:getOwnerFarmId(), MoneyType.VEHICLE_REPAIR, true, true)
+                    TireStorage.removeFromStorage(screen.vehicle, setId)
                     TireManager.injWokshopScreenSetVehicle(screen, screen.vehicle) -- Refresh the vehicle state
                 end
             end
@@ -653,6 +588,7 @@ function TireManager.injWokshopScreenSetVehicle(screen, vehicle)
 	if vehicle == nil or not TireManager.isWheelsVehicle(vehicle) then
 		screen.tmsBtn:setDisabled(true)
         screen.tmsManageBtn:setDisabled(true)
+        screen.tmsManageBtn:setText(g_i18n:getText("ui_tmsManageTiresButtonFalse"))
 	else
 		screen.tmsBtn:setDisabled(false)
         local stored = TireStorage.getStoredByVehicle(vehicle)
@@ -756,25 +692,23 @@ function TireManager.injWheelsOnLoadFinished(vehicle, savegame)
 	local tireType = savegame.xmlFile:getValue(vehicleKey)
 	TireManager.setTireType(vehicle, tireType or 'allSeason')
 
-    if vehicle.isServer then
-		local isSavegameLoad = (savegame.xmlFile.filename ~= "")
-		for wheelIdx, wheel in ipairs(vehicle.spec_wheels.wheels) do
-			local wheelDistanceKey = string.format("%s.wheels.wheel(%d)#stTireTravelled", savegame.key, wheelIdx - 1)
-			local travelDist = savegame.xmlFile:getValue(wheelDistanceKey)
-			if travelDist ~= nil and isSavegameLoad then
-				wheel.stTireTravelled = travelDist
-			else
-				wheel.stTireTravelled = 0
-			end
-			local wheelWearKey = string.format("%s.wheels.wheel(%d)#stTireWear", savegame.key, wheelIdx - 1)
-			local wear = savegame.xmlFile:getValue(wheelWearKey)
-			if wear ~= nil and isSavegameLoad then
-				wheel.stTireWear = wear
-			else
-				wheel.stTireWear = 0
-			end
-		end
-	end
+    local isSavegameLoad = (savegame.xmlFile.filename ~= "")
+    for wheelIdx, wheel in ipairs(vehicle.spec_wheels.wheels) do
+        local wheelDistanceKey = string.format("%s.wheels.wheel(%d)#stTireTravelled", savegame.key, wheelIdx - 1)
+        local travelDist = savegame.xmlFile:getValue(wheelDistanceKey)
+        if travelDist ~= nil and isSavegameLoad then
+            wheel.stTireTravelled = travelDist
+        else
+            wheel.stTireTravelled = 0
+        end
+        local wheelWearKey = string.format("%s.wheels.wheel(%d)#stTireWear", savegame.key, wheelIdx - 1)
+        local wear = savegame.xmlFile:getValue(wheelWearKey)
+        if wear ~= nil and isSavegameLoad then
+            wheel.stTireWear = wear
+        else
+            wheel.stTireWear = 0
+        end
+    end
 end
 Wheels.onLoadFinished = Utils.appendedFunction(Wheels.onLoadFinished, TireManager.injWheelsOnLoadFinished)
 
