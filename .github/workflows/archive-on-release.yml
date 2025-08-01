@@ -13,6 +13,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Remove dev-only files
+        run: |
+          rm -rf .vscode .github mod.luarc.json
+          find . -name '*.png' -type f -delete
+          find . -name '*.md' -type f -delete
+
       - name: Create zip archive
         run: |
           zip -r FS25_SeasonalTires.zip . -x '*.git*' '.github/*'
